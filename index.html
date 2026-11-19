@@ -1,0 +1,954 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SIDA-DESA — Sistem Informasi Data Aparatur, BPD & Kelembagaan Desa</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,500;0,6..72,600;0,6..72,700;1,6..72,500&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-ivory: #FAF9F6;
+      --surface-white: #FFFFFF;
+      --accent-forest: #064E3B;
+      --accent-forest-hover: #065F46;
+      --accent-gold: #B45309;
+      --text-ink: #111827;
+      --text-muted: #4B5563;
+      --border-hairline: #E5E7EB;
+    }
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: var(--bg-ivory);
+      color: var(--text-ink);
+    }
+    .font-serif-editorial {
+      font-family: 'Newsreader', Georgia, serif;
+    }
+    .tab-active {
+      color: var(--accent-forest);
+      border-bottom: 2.5px solid var(--accent-forest);
+      font-weight: 600;
+    }
+    @media print {
+      .no-print { display: none !important; }
+      body { background: #FFFFFF !important; }
+      .print-container { box-shadow: none !important; border: none !important; padding: 0 !important; }
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+  <!-- Top Header -->
+  <header class="bg-white border-b border-gray-200 no-print">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      <div class="flex items-start sm:items-center gap-3.5">
+        <div class="w-11 h-11 rounded-xl bg-[#064E3B] text-white flex items-center justify-center shrink-0 shadow-sm">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-6h6v6M9 9h.01M15 9h.01M9 13h.01M15 13h.01"/>
+          </svg>
+        </div>
+        <div>
+          <div class="flex flex-wrap items-center gap-2">
+            <h1 class="font-serif-editorial text-xl sm:text-2xl font-bold tracking-tight text-gray-900">SIDA-DESA</h1>
+            <span class="text-xs font-semibold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-emerald-50 text-[#064E3B] border border-emerald-200">Administrasi Desa</span>
+          </div>
+          <p id="village-subtitle" class="text-xs sm:text-sm text-gray-600 mt-0.5">
+            Sistem Informasi Data Aparatur, BPD & Kelembagaan Desa • <span id="hdr-desa">Desa Contoh</span>, Kec. <span id="hdr-kec">Gunung Putri</span>, Kab. <span id="hdr-kab">Bogor</span>, <span id="hdr-prov">Jawa Barat</span>
+          </p>
+        </div>
+      </div>
+
+      <div class="flex flex-wrap items-center gap-2">
+        <button onclick="openProfileModal()" class="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs sm:text-sm font-medium rounded-lg border border-gray-300 bg-white text-gray-800 hover:bg-gray-50 transition cursor-pointer">
+          <svg class="w-4 h-4 text-[#B45309]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+          </svg>
+          Ubah Profil Desa
+        </button>
+        <button onclick="printCurrentView()" class="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs sm:text-sm font-medium rounded-lg bg-[#064E3B] text-white hover:bg-[#065F46] transition cursor-pointer">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
+          </svg>
+          Cetak Laporan
+        </button>
+      </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 border-t border-gray-100">
+      <nav class="flex gap-6 overflow-x-auto text-sm" aria-label="Tabs">
+        <button id="tab-dashboard" onclick="switchTab('dashboard')" class="py-3 border-b-2 border-transparent text-gray-600 hover:text-gray-900 whitespace-nowrap tab-active cursor-pointer">Dashboard</button>
+        <button id="tab-rtrw" onclick="switchTab('rtrw')" class="py-3 border-b-2 border-transparent text-gray-600 hover:text-gray-900 whitespace-nowrap cursor-pointer">Pengurus RT & RW <span id="badge-rtrw" class="ml-1 text-xs px-1.5 py-0.5 rounded bg-amber-50 text-[#B45309] font-semibold">116</span></button>
+        <button id="tab-aparatur" onclick="switchTab('aparatur')" class="py-3 border-b-2 border-transparent text-gray-600 hover:text-gray-900 whitespace-nowrap cursor-pointer">Aparatur Desa <span id="badge-aparatur" class="ml-1 text-xs px-1.5 py-0.5 rounded bg-gray-100 text-gray-700 font-semibold">0</span></button>
+        <button id="tab-bpd" onclick="switchTab('bpd')" class="py-3 border-b-2 border-transparent text-gray-600 hover:text-gray-900 whitespace-nowrap cursor-pointer">BPD <span id="badge-bpd" class="ml-1 text-xs px-1.5 py-0.5 rounded bg-gray-100 text-gray-700 font-semibold">0</span></button>
+        <button id="tab-kelembagaan" onclick="switchTab('kelembagaan')" class="py-3 border-b-2 border-transparent text-gray-600 hover:text-gray-900 whitespace-nowrap cursor-pointer">Kelembagaan Desa <span id="badge-kelembagaan" class="ml-1 text-xs px-1.5 py-0.5 rounded bg-gray-100 text-gray-700 font-semibold">0</span></button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 print-container">
+
+    <!-- Kop Surat (Visible on Print) -->
+    <div id="print-kop" class="hidden print:block border-b-2 border-gray-900 pb-3 mb-5 text-center">
+      <h2 class="font-serif-editorial text-lg font-bold uppercase tracking-wide">PEMERINTAH KABUPATEN <span id="kop-kab">BOGOR</span></h2>
+      <h3 class="font-serif-editorial text-base font-bold uppercase">KECAMATAN <span id="kop-kec">GUNUNG PUTRI</span> • DESA <span id="kop-desa">CONTOH</span></h3>
+      <p class="text-xs text-gray-600">Provinsi <span id="kop-prov">Jawa Barat</span> • Dokumen Rekapitulasi SIDA-DESA</p>
+    </div>
+
+    <!-- DASHBOARD VIEW -->
+    <section id="view-dashboard" class="space-y-6">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="bg-white rounded-xl border border-gray-200 p-5">
+          <p class="text-xs font-semibold uppercase tracking-wider text-gray-500">Pengurus RT & RW</p>
+          <div class="mt-2 flex items-baseline justify-between">
+            <span id="stat-rtrw-total" class="font-serif-editorial text-3xl font-bold text-gray-900">116</span>
+            <span id="stat-rtrw-split" class="text-xs font-medium text-[#064E3B] bg-emerald-50 px-2 py-0.5 rounded">96 RT • 20 RW</span>
+          </div>
+          <p class="text-xs text-gray-500 mt-1.5">Data terimpor dari respons formulir</p>
+        </div>
+
+        <div class="bg-white rounded-xl border border-gray-200 p-5">
+          <p class="text-xs font-semibold uppercase tracking-wider text-gray-500">Aparatur Pemerintah Desa</p>
+          <div class="mt-2 flex items-baseline justify-between">
+            <span id="stat-aparatur-total" class="font-serif-editorial text-3xl font-bold text-gray-900">0</span>
+            <span class="text-xs font-medium text-[#B45309] bg-amber-50 px-2 py-0.5 rounded">Pemdes</span>
+          </div>
+          <p class="text-xs text-gray-500 mt-1.5">Kades, Sekdes, Kaur, Kasi & Kadus</p>
+        </div>
+
+        <div class="bg-white rounded-xl border border-gray-200 p-5">
+          <p class="text-xs font-semibold uppercase tracking-wider text-gray-500">Anggota BPD</p>
+          <div class="mt-2 flex items-baseline justify-between">
+            <span id="stat-bpd-total" class="font-serif-editorial text-3xl font-bold text-gray-900">0</span>
+            <span class="text-xs font-medium text-gray-700 bg-gray-100 px-2 py-0.5 rounded">Permusyawaratan</span>
+          </div>
+          <p class="text-xs text-gray-500 mt-1.5">Pimpinan & anggota keterwakilan</p>
+        </div>
+
+        <div class="bg-white rounded-xl border border-gray-200 p-5">
+          <p class="text-xs font-semibold uppercase tracking-wider text-gray-500">Kelembagaan Desa (LKD/LAD)</p>
+          <div class="mt-2 flex items-baseline justify-between">
+            <span id="stat-lembaga-total" class="font-serif-editorial text-3xl font-bold text-gray-900">0</span>
+            <span class="text-xs font-medium text-[#064E3B] bg-emerald-50 px-2 py-0.5 rounded">Lembaga</span>
+          </div>
+          <p class="text-xs text-gray-500 mt-1.5">LPMD, PKK, Karang Taruna, Posyandu</p>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="bg-white rounded-xl border border-gray-200 p-5">
+          <h2 class="font-serif-editorial text-lg font-semibold text-gray-900 mb-1">Sebaran Jabatan Pengurus RT & RW</h2>
+          <p class="text-xs text-gray-500 mb-4">Distribusi jabatan dari 116 entri data pengurus RT/RW</p>
+          <div class="h-72">
+            <canvas id="chartJabatan"></canvas>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-xl border border-gray-200 p-5">
+          <h2 class="font-serif-editorial text-lg font-semibold text-gray-900 mb-1">Komposisi Unit & Data Kelembagaan</h2>
+          <p class="text-xs text-gray-500 mb-4">Perbandingan unit RT vs RW dan jumlah data per modul</p>
+          <div class="h-72">
+            <canvas id="chartUnit"></canvas>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- RT & RW VIEW -->
+    <section id="view-rtrw" class="hidden space-y-4">
+      <div class="bg-white rounded-xl border border-gray-200 p-4 sm:p-5">
+        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-4">
+          <div>
+            <h2 class="font-serif-editorial text-xl font-bold text-gray-900">Data Pengurus RT & RW</h2>
+            <p class="text-xs text-gray-500 mt-0.5">Menampilkan <span id="rtrw-count-label" class="font-semibold text-gray-800">116</span> data pengurus RT/RW beserta identitas, kontak, jabatan, dan tautan dokumen.</p>
+          </div>
+          <div class="flex flex-wrap items-center gap-2 no-print">
+            <label class="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 cursor-pointer">
+              <svg class="w-4 h-4 text-[#064E3B]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+              </svg>
+              Impor CSV
+              <input type="file" accept=".csv" class="hidden" onchange="importRTRWCSV(event)" />
+            </label>
+            <button onclick="exportRTRWCSV()" class="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 cursor-pointer">
+              <svg class="w-4 h-4 text-[#B45309]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+              </svg>
+              Export CSV
+            </button>
+            <button onclick="openRTRWModal()" class="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold rounded-lg bg-[#064E3B] text-white hover:bg-[#065F46] cursor-pointer">
+              + Tambah Data RT/RW
+            </button>
+          </div>
+        </div>
+
+        <!-- Filter & Search -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4 no-print">
+          <input id="rtrw-search" oninput="renderRTRWTable()" type="text" placeholder="Cari nama, NIK, No. KK, jabatan, atau pekerjaan..." class="px-3.5 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#064E3B]/30 focus:border-[#064E3B]" />
+          <select id="rtrw-unit-filter" onchange="renderRTRWTable()" class="px-3.5 py-2 text-sm border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#064E3B]/30">
+            <option value="">Semua Unit (RT & RW)</option>
+            <option value="RT">Unit RT saja</option>
+            <option value="RW">Unit RW saja</option>
+          </select>
+          <select id="rtrw-jabatan-filter" onchange="renderRTRWTable()" class="px-3.5 py-2 text-sm border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#064E3B]/30">
+            <option value="">Semua Jabatan</option>
+          </select>
+        </div>
+
+        <!-- Table -->
+        <div class="overflow-x-auto border border-gray-200 rounded-lg">
+          <table class="min-w-full divide-y divide-gray-200 text-xs sm:text-sm">
+            <thead class="bg-[#FAF9F6] text-gray-700 font-semibold">
+              <tr>
+                <th class="px-3 py-3 text-left">No</th>
+                <th class="px-3 py-3 text-left">Nama Lengkap</th>
+                <th class="px-3 py-3 text-left">Unit & Jabatan</th>
+                <th class="px-3 py-3 text-left">NIK / No. KK</th>
+                <th class="px-3 py-3 text-left">TTL & Pekerjaan</th>
+                <th class="px-3 py-3 text-left">Kontak</th>
+                <th class="px-3 py-3 text-left no-print">Berkas</th>
+                <th class="px-3 py-3 text-right no-print">Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="rtrw-tbody" class="divide-y divide-gray-100 bg-white"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- GENERIC MODULE VIEW (Aparatur, BPD, Kelembagaan) -->
+    <section id="view-generic" class="hidden space-y-4">
+      <div class="bg-white rounded-xl border border-gray-200 p-4 sm:p-5">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
+          <div>
+            <h2 id="generic-title" class="font-serif-editorial text-xl font-bold text-gray-900">Modul Data</h2>
+            <p id="generic-desc" class="text-xs text-gray-500 mt-0.5">Kelola data resmi desa secara terstruktur.</p>
+          </div>
+          <div class="flex flex-wrap items-center gap-2 no-print">
+            <button onclick="exportGenericCSV()" class="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 cursor-pointer">
+              Export CSV
+            </button>
+            <button onclick="openGenericModal()" class="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold rounded-lg bg-[#064E3B] text-white hover:bg-[#065F46] cursor-pointer">
+              + Tambah Data
+            </button>
+          </div>
+        </div>
+
+        <div class="mb-4 no-print">
+          <input id="generic-search" oninput="renderGenericTable()" type="text" placeholder="Cari data..." class="w-full sm:w-80 px-3.5 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#064E3B]/30" />
+        </div>
+
+        <div class="overflow-x-auto border border-gray-200 rounded-lg">
+          <table class="min-w-full divide-y divide-gray-200 text-xs sm:text-sm">
+            <thead id="generic-thead" class="bg-[#FAF9F6] text-gray-700 font-semibold"></thead>
+            <tbody id="generic-tbody" class="divide-y divide-gray-100 bg-white"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Modal Profil Desa -->
+  <div id="profile-modal" class="fixed inset-0 z-50 hidden bg-black/40 flex items-center justify-center p-4 no-print">
+    <div class="bg-white rounded-xl max-w-md w-full p-6 border border-gray-200 shadow-xl space-y-4">
+      <h3 class="font-serif-editorial text-lg font-bold text-gray-900">Profil Pemerintahan Desa</h3>
+      <div class="space-y-3 text-sm">
+        <div>
+          <label class="block text-xs font-medium text-gray-700 mb-1">Nama Desa</label>
+          <input id="inp-desa" type="text" class="w-full px-3 py-2 border border-gray-300 rounded-lg" />
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-700 mb-1">Kecamatan</label>
+          <input id="inp-kec" type="text" class="w-full px-3 py-2 border border-gray-300 rounded-lg" />
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-700 mb-1">Kabupaten / Kota</label>
+          <input id="inp-kab" type="text" class="w-full px-3 py-2 border border-gray-300 rounded-lg" />
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-700 mb-1">Provinsi</label>
+          <input id="inp-prov" type="text" class="w-full px-3 py-2 border border-gray-300 rounded-lg" />
+        </div>
+      </div>
+      <div class="flex justify-end gap-2 pt-2">
+        <button onclick="closeProfileModal()" class="px-4 py-2 text-xs font-medium rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 cursor-pointer">Batal</button>
+        <button onclick="saveProfile()" class="px-4 py-2 text-xs font-semibold rounded-lg bg-[#064E3B] text-white hover:bg-[#065F46] cursor-pointer">Simpan Profil</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal RT/RW -->
+  <div id="rtrw-modal" class="fixed inset-0 z-50 hidden bg-black/40 flex items-center justify-center p-4 overflow-y-auto no-print">
+    <div class="bg-white rounded-xl max-w-2xl w-full p-6 border border-gray-200 shadow-xl space-y-4 my-8">
+      <h3 id="rtrw-modal-title" class="font-serif-editorial text-lg font-bold text-gray-900">Form Data Pengurus RT / RW</h3>
+      <input type="hidden" id="rtrw-edit-id" />
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+        <div>
+          <label class="block text-xs font-medium text-gray-700 mb-1">Nama Lengkap *</label>
+          <input id="rtrw-nama" type="text" class="w-full px-3 py-2 border border-gray-300 rounded-lg" />
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-700 mb-1">Unit</label>
+          <select id="rtrw-unit" class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white">
+            <option value="RT">RT</option>
+            <option value="RW">RW</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-700 mb-1">Jabatan *</label>
+          <input id="rtrw-jabatan" type="text" placeholder="Contoh: KETUA RT" class="w-full px-3 py-2 border border-gray-300 rounded-lg" />
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-700 mb-1">NIK</label>
+          <input id="rtrw-nik" type="text" class="w-full px-3 py-2 border border-gray-300 rounded-lg" />
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-700 mb-1">Nomor Kartu Keluarga (NKK)</label>
+          <input id="rtrw-nkk" type="text" class="w-full px-3 py-2 border border-gray-300 rounded-lg" />
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-700 mb-1">Nomor BPJS Kesehatan</label>
+          <input id="rtrw-bpjs" type="text" class="w-full px-3 py-2 border border-gray-300 rounded-lg" />
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-700 mb-1">Tempat Lahir</label>
+          <input id="rtrw-tmpt" type="text" class="w-full px-3 py-2 border border-gray-300 rounded-lg" />
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-700 mb-1">Tanggal Lahir</label>
+          <input id="rtrw-tgl" type="text" placeholder="DD/MM/YYYY" class="w-full px-3 py-2 border border-gray-300 rounded-lg" />
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-700 mb-1">Pekerjaan</label>
+          <input id="rtrw-kerja" type="text" class="w-full px-3 py-2 border border-gray-300 rounded-lg" />
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-700 mb-1">Status Perkawinan</label>
+          <input id="rtrw-kawin" type="text" class="w-full px-3 py-2 border border-gray-300 rounded-lg" />
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-700 mb-1">Nomor HP Aktif</label>
+          <input id="rtrw-hp" type="text" class="w-full px-3 py-2 border border-gray-300 rounded-lg" />
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-700 mb-1">Email Aktif</label>
+          <input id="rtrw-email" type="text" class="w-full px-3 py-2 border border-gray-300 rounded-lg" />
+        </div>
+      </div>
+      <div class="flex justify-end gap-2 pt-2">
+        <button onclick="closeRTRWModal()" class="px-4 py-2 text-xs font-medium rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 cursor-pointer">Batal</button>
+        <button onclick="saveRTRW()" class="px-4 py-2 text-xs font-semibold rounded-lg bg-[#064E3B] text-white hover:bg-[#065F46] cursor-pointer">Simpan Data</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Generic (Aparatur, BPD, Kelembagaan) -->
+  <div id="generic-modal" class="fixed inset-0 z-50 hidden bg-black/40 flex items-center justify-center p-4 no-print">
+    <div class="bg-white rounded-xl max-w-lg w-full p-6 border border-gray-200 shadow-xl space-y-4">
+      <h3 id="generic-modal-title" class="font-serif-editorial text-lg font-bold text-gray-900">Tambah Data</h3>
+      <input type="hidden" id="gen-edit-id" />
+      <div id="gen-form-fields" class="space-y-3 text-sm"></div>
+      <div class="flex justify-end gap-2 pt-2">
+        <button onclick="closeGenericModal()" class="px-4 py-2 text-xs font-medium rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 cursor-pointer">Batal</button>
+        <button onclick="saveGeneric()" class="px-4 py-2 text-xs font-semibold rounded-lg bg-[#064E3B] text-white hover:bg-[#065F46] cursor-pointer">Simpan</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const INITIAL_RTRW_DATA = [{"id": "RTRW-001", "cap_waktu": "2026/11/16 2:28:33 PM GMT+7", "nama": "Dandi Setiawan", "nik": "3201020509980005", "nkk": "3201022310180016", "bpjs": "0001461587769", "tempat_lahir": "Bogor", "tanggal_lahir": "05/09/1998", "agama": "Islam", "pekerjaan": "Karyawan swasta", "status_kawin": "KAWIN TERCATAT", "no_hp": "085811347553", "email": "dandisetiawan1727@gmail.com", "unit": "RT", "jabatan": "KETUA RT", "link_ktp": "https://drive.google.com/u/0/open?usp=forms_web&id=11tDTCvYCUXsSn-FYdBxNsbdLajEP_awO", "link_kk": "https://drive.google.com/u/0/open?usp=forms_web&id=1zxuPCqA76BD4K-NAyAaTLMLly7BMdEt9", "link_bpjs": "https://drive.google.com/u/0/open?usp=forms_web&id=1OpKJliBqJKkScjoPGAY_OJ891PHPYc3b", "link_foto": "https://drive.google.com/u/0/open?usp=forms_web&id=1lQK4iCVVxt_pLS_GSQrrcJjWXlS1V3xi", "link_npwp": "https://drive.google.com/u/0/open?usp=forms_web&id=1U5CbxHDL5ikFgWM15ZWRGQu-UEUqakwc", "status": "Aktif"}, {"id": "RTRW-002", "cap_waktu": "2026/11/16 2:39:02 PM GMT+7", "nama": "Marna", "nik": "3174060103721001", "nkk": "3174060507111021", "bpjs": "Tidak ada", "tempat_lahir": "Gunung Kidul", "tanggal_lahir": "01/03/1972", "agama": "Islam", "pekerjaan": "Swasta", "status_kawin": "KAWIN TERCATAT", "no_hp": "085959494390", "email": "marnasigap72@gmail.com", "unit": "RT", "jabatan": "KETUA RT", "link_ktp": "https://drive.google.com/u/0/open?usp=forms_web&id=164iHzsnMdLdDVwjtA-c5GBIJlaXCl85h", "link_kk": "https://drive.google.com/u/0/open?usp=forms_web&id=1rBYvaff5I7iStkDnRv0uTHu4nXGzfJZF", "link_bpjs": "https://drive.google.com/u/0/open?usp=forms_web&id=163YCWQhUc-jASPws-CwuYE6hlebbD4jc", "link_foto": "https://drive.google.com/u/0/open?usp=forms_web&id=1AvHpUsjPF3TciAxZPZN-jMzujeJWW1Mv", "link_npwp": "https://drive.google.com/u/0/open?usp=forms_web&id=1JFMDzQOj_TOsPy6R23T8IszdsLGQR8KG", "status": "Aktif"}, {"id": "RTRW-003", "cap_waktu": "2026/11/16 2:43:30 PM GMT+7", "nama": "Adi Priyono", "nik": "3671080204830004", "nkk": "3201020805131028", "bpjs": "0001131569493", "tempat_lahir": "SUKOHARJO", "tanggal_lahir": "02/04/1983", "agama": "ISLAM", "pekerjaan": "KARYAWAN SWASTA", "status_kawin": "KAWIN TERCATAT", "no_hp": "081383337099", "email": "adipriyono83@gmail.com", "unit": "RT", "jabatan": "KETUA RT", "link_ktp": "https://drive.google.com/u/0/open?usp=forms_web&id=1TrxkubCXsTppHP7kyWqdCO3wtEQqnwjK", "link_kk": "https://drive.google.com/u/0/open?usp=forms_web&id=1pFWwMaPgfIl5Xh3Q1KK_Eb3zxg8EOooM", "link_bpjs": "https://drive.google.com/u/0/open?usp=forms_web&id=1DU5dywY7jn4SDKkQLK0KuJHOvO6L2a3G", "link_foto": "https://drive.google.com/u/0/open?usp=forms_web&id=1DVc-wOnHaR0omUNJ8dugXQlj-N294MKp", "link_npwp": "https://drive.google.com/u/0/open?usp=forms_web&id=10Ef_Ztozv_LqN6irWPMf_GgM1I2XUxsW", "status": "Aktif"}, {"id": "RTRW-004", "cap_waktu": "2026/11/16 2:44:37 PM GMT+7", "nama": "Mahpudin", "nik": "3201020707940018", "nkk": "3201020211180010", "bpjs": "0001339972648", "tempat_lahir": "Bogor", "tanggal_lahir": "07/07/1994", "agama": "Islam", "pekerjaan": "Buruh harian lepas", "status_kawin": "KAWIN TERCATAT", "no_hp": "089669103305", "email": "mahpudin1234567@gmail.com", "unit": "RT", "jabatan": "KETUA RT", "link_ktp": "https://drive.google.com/u/0/open?usp=forms_web&id=1zfo6ikfpCl769J_-xI2iOOfUfc7dJDUv", "link_kk": "https://drive.google.com/u/0/open?usp=forms_web&id=11DaQbBFbH2n6pOz69gOQpM-1WdVY14WG", "link_bpjs": "https://drive.google.com/u/0/open?usp=forms_web&id=1dMBYaqEhj9yKU7AtUN7Tpgxd-Jvfq55a", "link_foto": "https://drive.google.com/u/0/open?usp=forms_web&id=1snnWDeYB0eMPcGndg32grl-pbQouEgD7", "link_npwp": "", "status": "Aktif"}, {"id": "RTRW-005", "cap_waktu": "2026/11/16 2:48:10 PM GMT+7", "nama": "PUJIONO", "nik": "3201021605750007", "nkk": "3201021206070078", "bpjs": "0001645037335", "tempat_lahir": "Bogor", "tanggal_lahir": "16/05/1975", "agama": "Islam", "pekerjaan": "Guru harian lepas", "status_kawin": "KAWIN TERCATAT", "no_hp": "081380915079", "email": "fujiono68@gmail.com", "unit": "RT", "jabatan": "KETUA RT", "link_ktp": "https://drive.google.com/u/0/open?usp=forms_web&id=1aBYn3cprxElBLPoS1QxJTxbm5LxqoWW4", "link_kk": "https://drive.google.com/u/0/open?usp=forms_web&id=1wA6qV1yGB2m-aGvVq2BhQQiXCOiiG63o", "link_bpjs": "https://drive.google.com/u/0/open?usp=forms_web&id=1vAzCaTDplbeN9SyoigJzrfBTI9f6lIi5", "link_foto": "https://drive.google.com/u/0/open?usp=forms_web&id=1gDvU6lpO3AD_d--8CMYT-t1XlZLExbXB", "link_npwp": "https://drive.google.com/u/0/open?usp=forms_web&id=13LX5Pmh_oc-vNDNsUt8Xz0xE09nZjJpf", "status": "Aktif"}, {"id": "RTRW-006", "cap_waktu": "2026/11/16 2:55:21 PM GMT+7", "nama": "KASTO", "nik": "3201021812780007", "nkk": "3201022502090039", "bpjs": "0000567043345", "tempat_lahir": "WONOGIRI", "tanggal_lahir": "18/12/1978", "agama": "ISLAM", "pekerjaan": "Pedagang", "status_kawin": "KAWIN TERCATAT", "no_hp": "081293201421", "email": "Kastosylistyo78@gmail.com", "unit": "RT", "jabatan": "KETUA RT", "link_ktp": "https://drive.google.com/u/0/open?usp=forms_web&id=1gKI1t73gAkM8Qwc_qZvbreGPcAtU1bcV", "link_kk": "https://drive.google.com/u/0/open?usp=forms_web&id=1i4ohzVDb5So-7WSjCTIrsVyJLdInjXfr", "link_bpjs": "https://drive.google.com/u/0/open?usp=forms_web&id=1bSUZbtKF6qj8FEXeQdczVUqdzPmvI0So", "link_foto": "https://drive.google.com/u/0/open?usp=forms_web&id=1p1uUnV9rG91w8EMioFnygorICdb3RX0z", "link_npwp": "", "status": "Aktif"}, {"id": "RTRW-007", "cap_waktu": "2026/11/16 3:13:09 PM GMT+7", "nama": "WAHYUDI", "nik": "3201022804820009", "nkk": "3201021811100017", "bpjs": "00016393307979", "tempat_lahir": "KEDIRI", "tanggal_lahir": "28/04/1982", "agama": "ISLAM", "pekerjaan": "KARYAWAN SWASTA", "status_kawin": "KAWIN TERCATAT", "no_hp": "082211887728", "email": "wahyukinan010409@gmail.com", "unit": "RT", "jabatan": "BENDAHARA RT", "link_ktp": "https://drive.google.com/u/0/open?usp=forms_web&id=1hkb76XfYBiGq8Y-ZVPJSUmgqHr01sE_N", "link_kk": "https://drive.google.com/u/0/open?usp=forms_web&id=1Ok9mj7xqGleD9KOYhX9lKwvEUaIJ73u4", "link_bpjs": "https://drive.google.com/u/0/open?usp=forms_web&id=1AYsqmh7UwMtcedCNhcu_22MhGAwo0k3k", "link_foto": "https://drive.google.com/u/0/open?usp=forms_web&id=19ayp43LCLntuHVsjxbxaRoh-ENHjSWPJ", "link_npwp": "https://drive.google.com/u/0/open?usp=forms_web&id=1HOQLqIslPoHv5S2NhRQoF_8-iFsYAV1Q", "status": "Aktif"}, {"id": "RTRW-008", "cap_waktu": "2026/11/16 3:14:55 PM GMT+7", "nama": "YATINEM", "nik": "3201027011680003", "nkk": "3201021207080006", "bpjs": "0001169243785", "tempat_lahir": "MAGETAN ,30 November 1968", "tanggal_lahir": "30/11/1968", "agama": "ISLAM", "pekerjaan": "Bendahara RT 01/05", "status_kawin": "CERAI HIDUP", "no_hp": "082122132522", "email": "yatinem3008@gmail.com", "unit": "RT", "jabatan": "BENDAHARA RT", "link_ktp": "https://drive.google.com/u/0/open?usp=forms_web&id=1SQ_6A4L0xIO3lMZA_4rfoXiRjFaQzkED", "link_kk": "https://drive.google.com/u/0/open?usp=forms_web&id=14Qum-ouX2SNfzEYxFy_mV1dW3BS5bqqO", "link_bpjs": "https://drive.google.com/u/0/open?usp=forms_web&id=15GqCTisUARc0Ui4ThTF72vQGY8e0tB_n", "link_foto": "https://drive.google.com/u/0/open?usp=forms_web&id=1fYD-KqQAZ_QsYBKRUz7cuAhuxCjzQ8X6", "link_npwp": "", "status": "Aktif"}, {"id": "RTRW-009", "cap_waktu": "2026/11/16 3:19:16 PM GMT+7", "nama": "Dudi sahrtudin", "nik": "3201021601860009", "nkk": "320122807090053", "bpjs": "0001138011715", "tempat_lahir": "BOGOR", "tanggal_lahir": "16/01/1986", "agama": "Islam", "pekerjaan": "Karyawan", "status_kawin": "KAWIN TERCATAT", "no_hp": "087791160916", "email": "dudisahrudindudi@gmail.com", "unit": "RT", "jabatan": "KETUA RT", "link_ktp": "https://drive.google.com/u/0/open?usp=forms_web&id=1hMF0V8WQXeUPwyr7H--unN0Eqrp_c506", "link_kk": "https://drive.google.com/u/0/open?usp=forms_web&id=1A0w4-qe-cufks7gQBiS4mHEMIiocwfdc", "link_bpjs": "https://drive.google.com/u/0/open?usp=forms_web&id=1LILfLGjyqXgzmgc2pSzUbF9Yb9RL_iky", "link_foto": "https://drive.google.com/u/0/open?usp=forms_web&id=11966lgUvQdttvCejNGvMLkV3bvOFiWkj", "link_npwp": "https://drive.google.com/u/0/open?usp=forms_web&id=1-RvN-8YmJEP4IIXAIgNo9VDzqDC3EHtg", "status": "Aktif"}, {"id": "RTRW-010", "cap_waktu": "2026/11/16 3:43:21 PM GMT+7", "nama": "TEGUH WIDODO", "nik": "3175102005830007", "nkk": "3175101401091222", "bpjs": "0001110145509", "tempat_lahir": "PEMALANG", "tanggal_lahir": "20/05/1983", "agama": "ISLAM", "pekerjaan": "TNI AL", "status_kawin": "KAWIN TERCATAT", "no_hp": "081382892878", "email": "Widodocikeas@gmail.com", "unit": "RT", "jabatan": "KETUA RT", "link_ktp": "https://drive.google.com/u/0/open?usp=forms_web&id=1U_WFboit12Yx3NfnDiQbVF4Td572Ajfx", "link_kk": "https://drive.google.com/u/0/open?usp=forms_web&id=1MYcukisvakXrwwmlvuW-z_JPBBpRJqYi", "link_bpjs": "https://drive.google.com/u/0/open?usp=forms_web&id=1oqaEKMh3eBu6H5TEXoC-gAdQ7hpPoaUU", "link_foto": "https://drive.google.com/u/0/open?usp=forms_web&id=1h9pQm0O9CSPZwDV07RJ-F3ClF4maouPc", "link_npwp": "", "status": "Aktif"}, {"id": "RTRW-011", "cap_waktu": "2026/11/16 3:51:00 PM GMT+7", "nama": "Marhoya", "nik": "3201024401750008", "nkk": "3201022002070060", "bpjs": "0001186028684", "tempat_lahir": "Baturaja", "tanggal_lahir": "04/01/1975", "agama": "Islam", "pekerjaan": "ibu rumah tangga", "status_kawin": "KAWIN TERCATAT", "no_hp": "083896985123", "email": "arismunandar52587@gmail.com", "unit": "RT", "jabatan": "BENDAHARA RT", "link_ktp": "https://drive.google.com/u/0/open?usp=forms_web&id=1ARq9hPoYDFvU1_Sucv_XZ_zst2h0Lhn9", "link_kk": "https://drive.google.com/u/0/open?usp=forms_web&id=15OAXoUIKOO7ULOCcfM9FIjf05FtxI3Xu", "link_bpjs": "https://drive.google.com/u/0/open?usp=forms_web&id=1-Dg1p1lF7En_TqEo-byabsjB5lxNfaMr", "link_foto": "https://drive.google.com/u/0/open?usp=forms_web&id=1GVxYxxRp6f-bR9FxWzVpvrc61ioZMSPa", "link_npwp": "", "status": "Aktif"}, {"id": "RTRW-012", "cap_waktu": "2026/11/16 4:18:31 PM GMT+7", "nama": "MTaufik", "nik": "3201021703820011", "nkk": "3201021903090069", "bpjs": "0001134540797", "tempat_lahir": "Bogor", "tanggal_lahir": "17/03/1982", "agama": "Islam", "pekerjaan": "Karyawan swasta", "status_kawin": "KAWIN TERCATAT", "no_hp": "081382069477", "email": "mt.820317@gmail.com", "unit": "RT", "jabatan": "KETUA RT", "link_ktp": "https://drive.google.com/u/0/open?usp=forms_web&id=1ti0N3fQl4_cWLiYkR3iKJrzVLqMd0Tlu", "link_kk": "https://drive.google.com/u/0/open?usp=forms_web&id=1utnT63mvNkGcD_VZIf9RN89Uo1NI0e_A", "link_bpjs": "https://drive.google.com/u/0/open?usp=forms_web&id=17ML1PeZqQIXgdbyAZZ6jBpC7P8ucQcjh", "link_foto": "https://drive.google.com/u/0/open?usp=forms_web&id=1LN4M7vyntkXBPnMd_MOeEGghau4Ke2hE", "link_npwp": "https://drive.google.com/u/0/open?usp=forms_web&id=1F8uKLh36ntcOho8J55gmWiHxNiLXuG2V", "status": "Aktif"}, {"id": "RTRW-013", "cap_waktu": "2026/11/16 4:47:06 PM GMT+7", "nama": "Supriatna", "nik": "3201021611840008", "nkk": "3201022807080041", "bpjs": "0001298559331", "tempat_lahir": "Tasikmalaya", "tanggal_lahir": "16/11/1984", "agama": "Islam", "pekerjaan": "Buruh harian lepas", "status_kawin": "KAWIN TERCATAT", "no_hp": "087785605410", "email": "supriatna161184@gmail.com", "unit": "RT", "jabatan": "KETUA RT", "link_ktp": "https://drive.google.com/u/0/open?usp=forms_web&id=1Retujb3-BCnGdGm2VfhS8TrjqoU41sL2", "link_kk": "https://drive.google.com/u/0/open?usp=forms_web&id=1JUaCm-OiyJW6fRuufrcMPbfH7A0Y_kcm", "link_bpjs": "https://drive.google.com/u/0/open?usp=forms_web&id=1unMySmLKI0VVkSEwktyyFD1Yy6oPN-FP", "link_foto": "https://drive.google.com/u/0/open?usp=forms_web&id=1I-sDaKRN8rq5UFW3aIuD0dv22ITz7Q-f", "link_npwp": "", "status": "Aktif"}, {"id": "RTRW-014", "cap_waktu": "2026/11/16 4:52:40 PM GMT+7", "nama": "Uan Rukandi", "nik": "3201021806760005", "nkk": "3201022908050024", "bpjs": "3201021806760005", "tempat_lahir": "CIANJUR", "tanggal_lahir": "18/06/1976", "agama": "Islam", "pekerjaan": "Karyawan swasta", "status_kawin": "KAWIN TERCATAT", "no_hp": "082148049426", "email": "uanr76@gmail.com", "unit": "RT", "jabatan": "SEKRETARIS RT", "link_ktp": "https://drive.google.com/u/0/open?usp=forms_web&id=1tY-CvWc3jh9-fqGePaSLljNr0crc6PmG", "link_kk": "https://drive.google.com/u/0/open?usp=forms_web&id=1QhvftDEY7VP-ISK6hJYxkb2HSXbnTKZQ", "link_bpjs": "https://drive.google.com/u/0/open?usp=forms_web&id=1JYAjv9-I9ryyzQfBWpZhkQ8zKQi01_0M", "link_foto": "https://drive.google.com/u/0/open?usp=forms_web&id=1m1HNHrtFUcydX68A7FvJVOc7VFOaHdFJ", "link_npwp": "https://drive.google.com/u/0/open?usp=forms_web&id=18DLLYM7Z0U6CUKg-PRe7FZ8OqhQs9m6c", "status": "Aktif"}, {"id": "RTRW-015", "cap_waktu": "2026/11/16 4:53:18 PM GMT+7", "nama": "Ahmad Khaerul Anwar", "nik": "3201022007760020", "nkk": "3201021906090066", "bpjs": "0001126708481", "tempat_lahir": "Brebes", "tanggal_lahir": "20/07/1975", "agama": "Islam", "pekerjaan": "Ojek online", "status_kawin": "KAWIN TERCATAT", "no_hp": "081318637606", "email": "Chairulanwar610@gmail.com", "unit": "RT", "jabatan": "KETUA RT", "link_ktp": "https://drive.google.com/u/0/open?usp=forms_web&id=1Fhrcgs-gPnM6T-3GTTfano2APzgQkD4F", "link_kk": "https://drive.google.com/u/0/open?usp=forms_web&id=1jMpbCVYThRIaeE5Yk7I99nyvgUrz6PDA", "link_bpjs": "https://drive.google.com/u/0/open?usp=forms_web&id=1V1m_ZIZPQZmiI-lTkIr7iOXxVgeMSGR7", "link_foto": "https://drive.google.com/u/0/open?usp=forms_web&id=1yzLG_cypK7Z4gkiDwp5chL_5Bjjg5Pr9", "link_npwp": "https://drive.google.com/u/0/open?usp=forms_web&id=1rI5BFYI8u81KfaYKvjz3FU5QtjNhEPb2", "status": "Aktif"}, {"id": "RTRW-016", "cap_waktu": "2026/11/16 5:08:56 PM GMT+7", "nama": "Mardiyo", "nik": "3201021401770005", "nkk": "3201020202120018", "bpjs": "0001195035254", "tempat_lahir": "yogyakarta", "tanggal_lahir": "14/01/1977", "agama": "Islam", "pekerjaan": "pegawai swasta", "status_kawin": "KAWIN TERCATAT", "no_hp": "085880866173", "email": "gobercoy730@gmail.com", "unit": "RT", "jabatan": "KETUA RT", "link_ktp": "https://drive.google.com/u/0/open?usp=forms_web&id=1anaWpeOk26se1TVflabzQTD2rmtFJ5pc", "link_kk": "https://drive.google.com/u/0/open?usp=forms_web&id=1xkzpaWRWkY4aJrzRXjF5-xfT2WO__See", "link_bpjs": "https://drive.google.com/u/0/open?usp=forms_web&id=1EhTyromLuv_Z7mhwj6bh8d25z1ZByq0V", "link_foto": "https://drive.google.com/u/0/open?usp=forms_web&id=1Fw4BsGQdkoeB8J1HFOnJGom2j94qCo4b", "link_npwp": "https://drive.google.com/u/0/open?usp=forms_web&id=1wRFosNF2V0NvEvMBlLXWtxngeG3ABPWa", "status": "Aktif"}, {"id": "RTRW-017", "cap_waktu": "2026/11/16 5:17:13 PM GMT+7", "nama": "Muhammad sidik", "nik": "3201241006930010", "nkk": "3201020805170023", "bpjs": "0001879014183", "tempat_lahir": "Bogor", "tanggal_lahir": "10/06/1993", "agama": "Islam", "pekerjaan": "Buruh harian lepas", "status_kawin": "KAWIN TERCATAT", "no_hp": "082299273991", "email": "sidikbonih@gmail.com", "unit": "RT", "jabatan": "KETUA RT", "link_ktp": "https://drive.google.com/u/0/open?usp=forms_web&id=1eDJRRp4zoN-cNyaPy6gpLur_f379gLwq", "link_kk": "https://drive.google.com/u/0/open?usp=forms_web&id=1k_cuGAT5qWm3eQPPiWadfOF3Zn3lhPJv", "link_bpjs": "https://drive.google.com/u/0/open?usp=forms_web&id=1WCgZcY8fof4nDOkeHxH3X9T_Sbpfvp47", "link_foto": "https://drive.google.com/u/0/open?usp=forms_web&id=1LtjEaH_Qa72EzD3BxVm9s77enNDqq90h", "link_npwp": "https://drive.google.com/u/0/open?usp=forms_web&id=1rM4xvhZTLzKDKTK5zlp5ihPmDvV5MNEu", "status": "Aktif"}, {"id": "RTRW-018", "cap_waktu": "2026/11/16 5:23:42 PM GMT+7", "nama": "ACA suryana", "nik": "3201021107800017", "nkk": "3201022005131006", "bpjs": "0001309954015", "tempat_lahir": "BOGOR", "tanggal_lahir": "11/07/1980", "agama": "Islam", "pekerjaan": "Buruh harian lepas", "status_kawin": "KAWIN TERCATAT", "no_hp": "081383420684", "email": "suryanaaca80@gmail.com", "unit": "RT", "jabatan": "KETUA RT", "link_ktp": "https://drive.google.com/u/0/open?usp=forms_web&id=1SM7JMPVcN33-BAJNa22O5kd9o6Gq_cob", "link_kk": "https://drive.google.com/u/0/open?usp=forms_web&id=1JrS2Xrs67iDE_zRu_sZqUQMmJl3t-C0l", "link_bpjs": "https://drive.google.com/u/0/open?usp=forms_web&id=1Z7g6nN_3Et_jjCgn503hwzjr84pPf_K5", "link_foto": "https://drive.google.com/u/0/open?usp=forms_web&id=1fG2S4UK5-EO4Jg_QJuadxpLzrmkfA0Lc", "link_npwp": "https://drive.google.com/u/0/open?usp=forms_web&id=1DPD4AlUStYqfGKUvIYfPKgLewuh1BIFC", "status": "Aktif"}, {"id": "RTRW-019", "cap_waktu": "2026/11/16 5:31:46 PM GMT+7", "nama": "YATNO", "nik": "3201021509720023", "nkk": "3201021501100028", "bpjs": "0001641035722", "tempat_lahir": "KARANGANYAR", "tanggal_lahir": "15/09/1972", "agama": "ISLAM", "pekerjaan": "Karyawan", "status_kawin": "KAWIN TERCATAT", "no_hp": "08979389928", "email": "ratno.gtg72@gmail.com", "unit": "RT", "jabatan": "KETUA RT", "link_ktp": "https://drive.google.com/u/0/open?usp=forms_web&id=1MIKJG5_EGSazGi1APY_E4_0bGWZG3gss", "link_kk": "https://drive.google.com/u/0/open?usp=forms_web&id=1OwCaq1T4evL6k2V_A8wuLma9RRXtWpBS", "link_bpjs": "https://drive.google.com/u/0/open?usp=forms_web&id=1qczPGBo4iQkRK9JTqA8p6cq79XYUcous", "link_foto": "https://drive.google.com/u/0/open?usp=forms_web&id=1WTyElkVH1XZ5-7u3TklR0RG3H77DaKIT", "link_npwp": "https://drive.google.com/u/0/open?usp=forms_web&id=1OSeSPYYR5Y9gBwjhjTSHBLxwoM08aUWF", "status": "Aktif"}, {"id": "RTRW-020", "cap_waktu": "2026/11/16 5:51:38 PM GMT+7", "nama": "Harun.", "nik": "3201020304720012.", "nkk": "3201021306080062", "bpjs": "0001273459454", "tempat_lahir": "Bogor", "tanggal_lahir": "03/04/1972", "agama": "Islam.", "pekerjaan": "Karyawan swasta.", "status_kawin": "KAWIN TERCATAT", "no_hp": "0813.1786.4848", "email": "cetharun18@gmail.com", "unit": "RT", "jabatan": "KETUA RT", "link_ktp": "https://drive.google.com/u/0/open?usp=forms_web&id=1OLd-7sD0YRPyu0J5Fh-9SAyD5xCNqYqe", "link_kk": "https://drive.google.com/u/0/open?usp=forms_web&id=1dnhoBZoAvJ2IrlDCUI_fIvaNYxhqkn_6", "link_bpjs": "https://drive.google.com/u/0/open?usp=forms_web&id=1HZBxqYa-C1NWue91BeZDTbjWZSCCf4Td", "link_foto": "https://drive.google.com/u/0/open?usp=forms_web&id=1iKo9XeMwfYMNwq_rdFjrkJL-RNzi71Ox", "link_npwp": "https://drive.google.com/u/0/open?usp=forms_web&id=1bETaTDKd2OScioE1FnZHkim4-As7zMUL", "status": "Aktif"}, {"id": "RTRW-021", "cap_waktu": "2026/11/16 5:54:59 PM GMT+7", "nama": "JUNAEDI", "nik": "3201020406730019", "nkk": "3201022207090044", "bpjs": "00014700166844", "tempat_lahir": "BOGOR", "tanggal_lahir": "04/06/1973", "agama": "Islam", "pekerjaan": "Tidak bekerja", "status_kawin": "KAWIN TIDAK TERCATAT", "no_hp": "0895384262311", "email": "junaedijunet753@gmail.com", "unit": "RT", "jabatan": "KETUA RT", "link_ktp": "https://drive.google.com/u/0/open?usp=forms_web&id=1U_NdCiwUkhTN3WNQiaw60psHVeUnHsI9", "link_kk": "https://drive.google.com/u/0/open?usp=forms_web&id=1dm0Jm1lwBStVz3oo6q3STrLvU7HpQdYh", "link_bpjs": "https://drive.google.com/u/0/open?usp=forms_web&id=1Zp7q4EIfRM68cAQzb-DmNsSFBzbXnaDl", "link_foto": "https://drive.google.com/u/0/open?usp=forms_web&id=1bcjIp4zE9D7ygaoOLOlvlE3CvvVPko-n", "link_npwp": "https://drive.google.com/u/0/open?usp=forms_web&id=1HIhrCC3nt3Sb9i0-IR-B2-RbAl9yiZty", "status": "Aktif"}, {"id": "RTRW-022", "cap_waktu": "2026/11/16 6:18:37 PM GMT+7", "nama": "MUSTOFA", "nik": "3201020408770008", "nkk": "32010209020700032", "bpjs": "0001645036626", "tempat_lahir": "Rembang", "tanggal_lahir": "03/08/1977", "agama": "Islam", "pekerjaan": "Wiraswasta", "status_kawin": "KAWIN TERCATAT", "no_hp": "087770090072", "email": "mustofa.banykarya@gmail.com", "unit": "RW", "jabatan": "KETUA RW", "link_ktp": "https://drive.google.com/u/0/open?usp=forms_web&id=1jsW4RNaimJYo4cjm0yiEzdolPTk7q8Fr", "link_kk": "https://drive.google.com/u/0/open?usp=forms_web&id=1GrOeD8EIe1cozOSNwX3OZb4NR4MPU2Iq", "link_bpjs": "https://drive.google.com/u/0/open?usp=forms_web&id=1nU4axZ8HS5gnodXurwU7UnSob1wW2_nU", "link_foto": "https://drive.google.com/u/0/open?usp=forms_web&id=1YT8ZDBvKcPBd6dibGvCIKAJKdq5gecPJ", "link_npwp": "https://drive.google.com/u/0/open?usp=forms_web&id=1Ni_nIxe6QPRtavB4ROQPjVTQKy97wmPj", "status": "Aktif"}, {"id": "RTRW-023", "cap_waktu": "2026/11/16 6:26:08 PM GMT+7", "nama": "Dede supriyadi Dede", "nik": "3201020704870009", "nkk": "3201020603140019", "bpjs": "0002897065113", "tempat_lahir": "BOGOR", "tanggal_lahir": "07/04/1987", "agama": "ISLAM", "pekerjaan": "Harian lepas", "status_kawin": "KAWIN TERCATAT", "no_hp": "083139759719", "email": "dedededesupriyadi07@gmail.com", "unit": "RT", "jabatan": "SEKSI KESEJAHTERAAN SOSIAL RT", "link_ktp": "https://drive.google.com/u/0/open?usp=forms_web&id=1E6ajoC7t0oU8gTRKWC4PQeU-3SvubsoN", "link_kk": "https://drive.google.com/u/0/open?usp=forms_web&id=1XgalLE9Eo34uY2xCOoThId1c3EJzOImR", "link_bpjs": "https://drive.google.com/u/0/open?usp=forms_web&id=1ab306YHDiLAV64FIxIfozge66K6GhWqg", "link_foto": "https://drive.google.com/u/0/open?usp=forms_web&id=13TW8QEdwp5XFNSSNNNqJvRQ8V0Z10D7z", "link_npwp": "https://drive.google.com/u/0/open?usp=forms_web&id=1D8lJaGUM7fWDVmuvO875Jmg2tnt6AO11", "status": "Aktif"}, {"id": "RTRW-024", "cap_waktu": "2026/11/16 6:32:07 PM GMT+7", "nama": "Wawan Samsudin", "nik": "3201021007750021", "nkk": "3201021002090086", "bpjs": "0001644067539", "tempat_lahir": "Bogor", "tanggal_lahir": "10/07/1975", "agama": "Islam", "pekerjaan": "pegawai swasta", "status_kawin": "KAWIN TERCATAT", "no_hp": "082126902693", "email": "wawandace13@gmail.com", "unit": "RW", "jabatan": "KETUA RW", "link_ktp": "https://drive.google.com/u/0/open?usp=forms_web&id=1Th-_LtnulZgdNu0mgrmM8cawSL02kUPF", "link_kk": "https://drive.google.com/u/0/open?usp=forms_web&id=19qpt9am4Gn-nSBMmr79nrzMSHc3P-1LQ", "link_bpjs": "https://drive.google.com/u/0/open?usp=forms_web&id=1HKJBw26Ot7ZMWZi8CfQBTiquEmhiUq3V", "link_foto": "https://drive.google.com/u/0/open?usp=forms_web&id=1S4LLhuddmsZwaI6NtEufnhErSWfZOesG", "link_npwp": "https://drive.google.com/u/0/open?usp=forms_web&id=1zVb5eT9MUHdrSjcjmUIWU5_nha5j0Sqg", "status": "Aktif"}, {"id": "RTRW-025", "cap_waktu": "2026/11/16 6:36:59 PM GMT+7", "nama": "DIKI DARMAWAN", "nik": "3201022505000001", "nkk": "3201022303050046", "bpjs": "tidak ada", "tempat_lahir": "BOGOR", "tanggal_lahir": "25/05/2000", "agama": "ISLAM", "pekerjaan": "Tidak Bekerja", "status_kawin": "BELUM KAWIN", "no_hp": "089528266064", "email": "dikiidarmawan420@gmail.com", "unit": "RT", "jabatan": "SEKSI PEMUDA, OLAHRAGA DAN KESENIAN RT", "link_ktp": "https://drive.google.com/u/0/open?usp=forms_web&id=1aivFRLCEFLXw2rTqKu7U7zSPqyN6kOzF", "link_kk": "https://drive.google.com/u/0/open?usp=forms_web&id=1piWrjOrNSn6I_JsWQrYXgmAnZ3DWNd8B", "link_bpjs": "https://drive.google.com/u/0/open?usp=forms_web&id=1DXN8p3FCuU1v8Q9ZaFDjxK9RDGqCGqw4", "link_foto": "https://drive.google.com/u/0/open?usp=forms_web&id=1tBfNsCwUyjrjukdlKMTfirFhaqQT0__B", "link_npwp": "https://drive.google.com/u/0/open?usp=forms_web&id=1HzFF26LR7gPCy323R8dJXGP4lNX8nOev", "status": "Aktif"}, {"id": "RTRW-026", "cap_waktu": "2026/11/16 6:48:38 PM GMT+7", "nama": "Afrian Yoga Widani", "nik": "3402102304950002", "nkk": "3201022705210035", "bpjs": "0001841754655", "tempat_lahir": "Bantul", "tanggal_lahir": "23/04/1995", "agama": "Islam", "pekerjaan": "Karyawan swasta", "status_kawin": "KAWIN TERCATAT", "no_hp": "082113496299", "email": "frianyoga234@gmail.com", "unit": "RT", "jabatan": "SEKRETARIS RT", "link_ktp": "https://drive.google.com/u/0/open?usp=forms_web&id=1kllpBQj791sWNXiNEObIiYSEW4kp-Gp6", "link_kk": "https://drive.google.com/u/0/open?usp=forms_web&id=1PvD-fjmJDgVzKRhaGr7gQcAqEczoKUMT", "link_bpjs": "https://drive.google.com/u/0/open?usp=forms_web&id=1AMyIT0ygoknlmMDfKfAxVkz-Pd3D-SgU", "link_foto": "https://drive.google.com/u/0/open?usp=forms_web&id=1WI3CUzXI-eP0r3X9ttCiJhLQsNtMeuMD", "link_npwp": "https://drive.google.com/u/0/open?usp=forms_web&id=1jEQEGX9Cl8kNOgAfyn8_1-qUE4K-NpXf", "status": "Aktif"}, {"id": "RTRW-027", "cap_waktu": "2026/11/16 6:56:44 PM GMT+7", "nama": "Amin", "nik": "3201020102760006", "nkk": "3201022208070065", "bpjs": "0001140133004", "tempat_lahir": "Bogor", "tanggal_lahir": "01/02/1976", "agama": "Islam", "pekerjaan": "Karyawan", "status_kawin": "KAWIN TERCATAT", "no_hp": "0895346915701", "email": "Cimingjhon@gmail.com", "unit": "RW", "jabatan": "KETUA RW", "link_ktp": "https://drive.google.com/u/0/open?usp=forms_web&id=1eNc9olMmdmpFyOjvjeA1v6AKX9KTbIMK", "link_kk": "https://drive.google.com/u/0/open?usp=forms_web&id=11c_xHsv8jLympacNyZM34A519smG4pcM", "link_bpjs": "https://drive.google.com/u/0/open?usp=forms_web&id=1zCJMqUcR5O08OD7EMdaoIEsJ2rOTtGTJ", "link_foto": "https://drive.google.com/u/0/open?usp=forms_web&id=1l1l7anZE8JuvN6G5OX6kp5N6K2Oe_1hM", "link_npwp": "", "status": "Aktif"}, {"id": "RTRW-028", "cap_waktu": "2026/11/16 6:58:41 PM GMT+7", "nama": "Tudi Siswadi", "nik": "3201020906770008", "nkk": "3201021105070043", "bpjs": "0001126689265", "tempat_lahir": "Boyolali", "tanggal_lahir": "09/06/1977", "agama": "Islam", "pekerjaan": "Wiraswasta", "status_kawin": "KAWIN TERCATAT", "no_hp": "08111119677", "email": "tudi.siswadi@gmail.com", "unit": "RW", "jabatan": "KETUA RW", "link_ktp": "https://drive.google.com/u/0/open?usp=forms_web&id=1lAkEQXFvLPcE0xf8iqVIvHBCLj2Tg9Ig", "link_kk": "https://drive.google.com/u/0/open?usp=forms_web&id=1Mu2fRkwgoShkAdmCKtpF1ejPtWSu1eVW", "link_bpjs": "https://drive.google.com/u/0/open?usp=forms_web&id=1BkDVsm7cyVeElpHFJsu_iNpcqPBYLdQ5", "link_foto": "https://drive.google.com/u/0/open?usp=forms_web&id=1jldYmRq6M3woialoFV_WGVV0V5cq42o6", "link_npwp": "https://drive.google.com/u/0/open?usp=forms_web&id=1T-_ou4vKuqWsJnafJlfwcQZtzy4ni1DW", "status": "Aktif"}, {"id": "RTRW-029", "cap_waktu": "2026/11/16 7:05:13 PM GMT+7", "nama": "Wahyudi", "nik": "3201020509830018", "nkk": "32010221611090020", "bpjs": "0001129164952", "tempat_lahir": "Bogor", "tanggal_lahir": "05/09/1983", "agama": "Islam", "pekerjaan": "Karyawan swasta", "status_kawin": "KAWIN TERCATAT", "no_hp": "089513409617", "email": "Wahyudiaway48@gmail.com", "unit": "RT", "jabatan": "KETUA RT", "link_ktp": "https://drive.google.com/u/0/open?usp=forms_web&id=1ptMl19172vJWlwNgH4K7gpoYSgrXciwx", "link_kk": "https://drive.google.com/u/0/open?usp=forms_web&id=1ARZyb-7KkgqIu8DF8KnqNrAMq29IY_Qc", "link_bpjs": "https://drive.google.com/u/0/open?usp=forms_web&id=1jwB2Bv3Z9dSUkuZDk56dmMxL5kK_j8WD", "link_foto": "https://drive.google.com/u/0/open?usp=forms_web&id=1UKXaS-Cie3_6XuxhJb34GIEY72uOhbE-", "link_npwp": "https://drive.google.com/u/0/open?usp=forms_web&id=1nbpC7li4NX7jHxEX831WyVPSDHWywZwn", "status": "Aktif"}, {"id": "RTRW-030", "cap_waktu": "2026/11/16 7:09:20 PM GMT+7", "nama": "Tarmanah", "nik": "3273265706840001", "nkk": "3201022901130010", "bpjs": "0002183403958", "tempat_lahir": "Bandung", "tanggal_lahir": "17-06-1984", "agama": "Islam", "pekerjaan": "Ibu rumah tangga", "status_kawin": "KAWIN TERCATAT", "no_hp": "085846652187", "email": "puputnenk23@gmail.com", "unit": "RT", "jabatan": "BENDAHARA RT", "link_ktp": "https://drive.google.com/u/0/open?usp=forms_web&id=1_TfmBq2s-XtHLMkpRQVqQveYQJeJ4pKG", "link_kk": "https://drive.google.com/u/0/open?usp=forms_web&id=1IKLxQ0vn9H0Qm7v0AHEKCKfNBw7SMknP", "link_bpjs": "https://drive.google.com/u/0/open?usp=forms_web&id=1rAlrKfhlgEq8LkwW5wbVn94usA32FiXV", "link_foto": "https://drive.google.com/u/0/open?usp=forms_web&id=1VMxH1izS6bD_wky0ah7EA3qAjK0AgElO", "link_npwp": "", "status": "Aktif"}, {"id": "RTRW-031", "cap_waktu": "2026/11/16 7:10:22 PM GMT+7", "nama": "ARIF HERMAWAN", "nik": "3214012401780003", "nkk": "3201020305180025", "bpjs": "0001515544975", "tempat_lahir": "BANDUNG", "tanggal_lahir": "24/01/1978", "agama": "ISLAM", "pekerjaan": "SWASTA`", "status_kawin": "KAWIN TERCATAT", "no_hp": "08994298866", "email": "areefhermawan@gmail.com", "unit": "RT", "jabatan": "KETUA RT", "link_ktp": "https://drive.google.com/u/0/open?usp=forms_web&id=1uD5wCKD5cnJBKuJH21Z70A11ssucIT-S", "link_kk": "https://drive.google.com/u/0/open?usp=forms_web&id=1C98ZuHYi3l1dqikh2V-jy7_ShigY-Q-y", "link_bpjs": "https://drive.google.com/u/0/open?usp=forms_web&id=1_zURtTB6F125ajCif7wHGClMZ1DM5rte", "link_foto": "https://drive.google.com/u/0/open?usp=forms_web&id=1xmPmbsOdzYvxrHtREsf331QTJGViBxtE", "link_npwp": "https://drive.google.com/u/0/open?usp=forms_web&id=16_KfAZt14w-rrGPHRTnxSNsS_3i752bR", "status": "Aktif"}, {"id": "RTRW-032", "cap_waktu": "2026/11/16 7:22:24 PM GMT+7", "nama": "ACIM", "nik": "3201021307740005", "nkk": "3201020105070045", "bpjs": "22056018751", "tempat_lahir": "BOGOR", "tanggal_lahir": "13/07/1974", "agama": "ISLAM", "pekerjaan": "KARYAWAN SWASTA", "status_kawin": "KAWIN TERCATAT", "no_hp": "083812670282", "email": "pakacim32@gmail.com", "unit": "RT", "jabatan": "KETUA RT", "link_ktp": "https://drive.google.com/u/0/open?usp=forms_web&id=1jgYr5O083sPYF4WuDmQw9bU0pO2xwHAz", "link_kk": "https://drive.google.com/u/0/open?usp=forms_web&id=1sByipzJiL2WZoV9SIR2gOzEtXS6fPX5L", "link_bpjs": "https://drive.google.com/u/0/open?usp=forms_web&id=19joCiERQbYvrp-TuZhn12JRkeNbGVn2q", "link_foto": "https://drive.google.com/u/0/open?usp=forms_web&id=1Few_Ssm2LnNdWf_mu2NT85MtoIjSE-Ux", "link_npwp": "https://drive.google.com/u/0/open?usp=forms_web&id=1vUdOCDSWeIfD9wzs9pMKsiY15qhas7K-", "status": "Aktif"}, {"id": "RTRW-033", "cap_waktu": "2026/11/16 7:22:45 PM GMT+7", "nama": "Khabidin", "nik": "3201020904620005", "nkk": "3201021106080056", "bpjs": "0001458723317", "tempat_lahir": "Banjarnegara", "tanggal_lahir": "09-04-1962", "agama": "Islam", "pekerjaan": "Wiraswasta", "status_kawin": "CERAI MATI", "no_hp": "081388692766", "email": "khabidin112233@gmail.com", "unit": "RT", "jabatan": "KETUA RT", "link_ktp": "https://drive.google.com/u/0/open?usp=forms_web&id=1V09L8oe1w6irV_aPyuGwmvL5f_6bW8X-", "link_kk": "https://drive.google.com/u/0/open?usp=forms_web&id=1rlO30b794gzMUI15r4VuIe87Ot2NJ_l6", "link_bpjs": "https://drive.google.com/u/0/open?usp=forms_web&id=1HD2sf3fZnDJrj9frj6_ZP1S4zc1gsAoN", "link_foto": "https://drive.google.com/u/0/open?usp=forms_web&id=1lT4ZpWtqrQ_QFdWjYBkKimnXhxj_7yLk", "link_npwp": "", "status": "Aktif"}, {"id": "RTRW-034", "cap_waktu": "2026/11/16 7:30:04 PM GMT+7", "nama": "RATIM", "nik": "3201021806630001", "nkk": "3201020309070085", "bpjs": "0003426082176", "tempat_lahir": "BOGOR", "tanggal_lahir": "18/06/1963", "agama": "Islam", "pekerjaan": "Sopir", "status_kawin": "CERAI MATI", "no_hp": "089631098800", "email": "vivobabe39@gmail.com", "unit": "RW", "jabatan": "KETUA RW", "link_ktp": "https://drive.google.com/u/0/open?usp=forms_web&id=1H50n3xvM7OgOeeQNY_MWgsP3ph7CIl8A", "link_kk": "https://drive.google.com/u/0/open?usp=forms_web&id=1hRpOGElskmro2YuH1MybhYM3M_1EChw2", "link_bpjs": "https://drive.google.com/u/0/open?usp=forms_web&id=1GMRsVatHqAo77xYx5P7_T0edB1H5vCD6", "link_foto": "https://drive.google.com/u/0/open?usp=forms_web&id=1g8MDj74uDOEhbXXGT2XjSXBwbDg1ZP0H", "link_npwp": "https://drive.google.com/u/0/open?usp=forms_web&id=1aHO8Bo-Pt5mjPr7xudOa_5vgMYyakxWD", "status": "Aktif"}, {"id": "RTRW-035", "cap_waktu": "2026/11/16 7:37:46 PM GMT+7", "nama": "Abdul kholik", "nik": "3201020504750012", "nkk": "3201021704090044", "bpjs": "0002312054796", "tempat_lahir": "Bogor", "tanggal_lahir": "05/04/1975", "agama": "Islam", "pekerjaan": "Bangunan", "status_kawin": "KAWIN TERCATAT", "no_hp": "089643233595", "email": "abdkholik146@gmail.com", "unit": "RT", "jabatan": "KETUA RT", "link_ktp": "https://drive.google.com/u/0/open?usp=forms_web&id=1780M36Pbp7mmGPLrIgQvS2JVVfbN-zb1", "link_kk": "https://drive.google.com/u/0/open?usp=forms_web&id=180_W5Uajomi2JplJckHLaoUkU4EEDnlH", "link_bpjs": "https://drive.google.com/u/0/open?usp=forms_web&id=10t0F_9-6CaXLI5Wj6OpXrdJrDLSg5DMv", "link_foto": "https://drive.google.com/u/0/open?usp=forms_web&id=1HgxdrFxmoUsF26xk3v0EEy_Xj0xTecDn", "link_npwp": "", "status": "Aktif"}, {"id": "RTRW-036", "cap_waktu": "2026/11/16 7:44:42 PM GMT+7", "nama": "Arlan Kressumartono", "nik": "3276020103800005", "nkk": "3201020908210009", "bpjs": "0003133912588", "tempat_lahir": "JAYAPURA", "tanggal_lahir": "01/03/1980", "agama": "ISLAM", "pekerjaan": "WIRASWASTA/WIRAUSAHA", "status_kawin": "KAWIN TERCATAT", "no_hp": "081287999977", "email": "browneyes147@gmail.com", "unit": "RW", "jabatan": "SEKRETARIS RW", "link_ktp": "https://drive.google.com/u/0/open?usp=forms_web&id=1852u8vA8C2hzf6FgSXYImsOf3ATXVbrh", "link_kk": "https://drive.google.com/u/0/open?usp=forms_web&id=1JRRAjhgHgfbievybT5tM72pFvcTOGkak", "link_bpjs": "https://drive.google.com/u/0/open?usp=forms_web&id=1Lpwh9lneY0hz1BNWQ9CR3jzPV4whs9vF", "link_foto": "https://drive.google.com/u/0/open?usp=forms_web&id=1PTrYo7xrsgwQL8JuSIbriGINDk_SI8wF", "link_npwp": "https://drive.google.com/u/0/open?usp=forms_web&id=17UXjoSE1lzF8m2DTwqp_xeBaw2mmI6kO", "status": "Aktif"}, {"id": "RTRW-037", "cap_waktu": "2026/11/16 7:52:57 PM GMT+7", "nama": "Imung", "nik": "3201021908730002", "nkk": "3201022604050062", "bpjs": "0001864302355", "tempat_lahir": "BOGOR", "tanggal_lahir": "19/08/1973", "agama": "Islam", "pekerjaan": "Buruh Harian Lepas", "status_kawin": "KAWIN TERCATAT", "no_hp": "089512207329", "email": "Imung1908@gmail.com", "unit": "RT", "jabatan": "KETUA RT", "link_ktp": "https://drive.google.com/u/0/open?usp=forms_web&id=1XJ02uEd0OHsOdSJAjV8NLF2L8-FlytAp", "link_kk": "https://drive.google.com/u/0/open?usp=forms_web&id=1b7d9GbUXliqs2RTShLIEkh22fs_QzdLd", "link_bpjs": "https://drive.google.com/u/0/open?usp=forms_web&id=10_aLkuon_saBaj3xKWrjVEAmHLBQD1at", "link_foto": "https://drive.google.com/u/0/open?usp=forms_web&id=1oVCb4JkyRyc9wI99-zGcN59s5WO_pS8x", "link_npwp": "", "status": "Aktif"}, {"id": "RTRW-038", "cap_waktu": "2026/11/16 8:01:55 PM GMT+7", "nama": "MUHAMAD YANI", "nik": "3201022101800008", "nkk": "3201020410050060", "bpjs": "0001131465791", "tempat_lahir": "SUKABUMI", "tanggal_lahir": "21/01/1980", "agama": "ISLAM", "pekerjaan": "SWASTA", "status_kawin": "KAWIN TERCATAT", "no_hp": "0895415331736", "email": "okyani27@gmail.com", "unit": "RT", "jabatan": "KETUA RT", "link_ktp": "https://drive.google.com/u/0/open?usp=forms_web&id=1bBer_Vro_nkko7_ephmRG0IzSpxdKuIk", "link_kk": "https://drive.google.com/u/0/open?usp=forms_web&id=1oDw6V4fT4p1PwWkxaHK7Ddf_MSiSv4y8", "link_bpjs": "https://drive.google.com/u/0/open?usp=forms_web&id=1-oN9CUaebOmRo1RbpWvofBh5BbRhv7Dl", "link_foto": "https://drive.google.com/u/0/open?usp=forms_web&id=1oVnokBpyzpXwQDqH-Jo85alAWDBVZe57", "link_npwp": "https://drive.google.com/u/0/open?usp=forms_web&id=1tShVo4rQzufQgZuEqinO8X3TmrQJP2He", "status": "Aktif"}, {"id": "RTRW-039", "cap_waktu": "2026/11/16 8:05:45 PM GMT+7", "nama": "Jajat", "nik": "3201022412790001", "nkk": "3201022408050033", "bpjs": "0001479557395", "tempat_lahir": "Bogor", "tanggal_lahir": "24/12/1979", "agama": "Islam", "pekerjaan": "Karyawan swasta", "status_kawin": "KAWIN TERCATAT", "no_hp": "087770126669", "email": "rtjajat03@gmail.com", "unit": "RT", "jabatan": "KETUA RT", "link_ktp": "https://drive.google.com/u/0/open?usp=forms_web&id=1U1tkeuRmyRcic1MB3L70-N4xc1iO9NnN", "link_kk": "https://drive.google.com/u/0/open?usp=forms_web&id=1mxWB2Fc7ldBOlQzZzslRSanVVvzlFfC5", "link_bpjs": "https://drive.google.com/u/0/open?usp=forms_web&id=1UHbXwVo08ucNeb19BFsaUSj1mCSLsONd", "link_foto": "https://drive.google.com/u/0/open?usp=forms_web&id=1in4MEYGn8CYn0HxFU_-Ym8Vm13_uTqxO", "link_npwp": "https://drive.google.com/u/0/open?usp=forms_web&id=1POK_j8IK9ygxvciQ9Nkt8_mLdHpyUphz", "status": "Aktif"}, {"id": "RTRW-040", "cap_waktu": "2026/11/16 8:09:40 PM GMT+7", "nama": "Heri Budiono", "nik": "3201020912700006", "nkk": "3201020311080030", "bpjs": "0003426082481", "tempat_lahir": "Palembang", "tanggal_lahir": "09/12/1970", "agama": "Islam", "pekerjaan": "Buruh harian lepas", "status_kawin": "KAWIN TERCATAT", "no_hp": "081999698250", "email": "heribudionoo09@gmail.com", "unit": "RT", "jabatan": "KETUA RT", "link_ktp": "https://drive.google.com/u/0/open?usp=forms_web&id=1lZVBg0HqXt67yC2kIEcGnWcDDangusua", "link_kk": "https://drive.google.com/u/0/open?usp=forms_web&id=1lsrTdxh6vbPWUFiJDlhHB13SCDQHan4_", "link_bpjs": "https://drive.google.com/u/0/open?usp=forms_web&id=1hRKP4ATzIlt4K-WQm4_m37bUZwUwdvUV", "link_foto": "https://drive.google.com/u/0/open?usp=forms_web&id=1nPCYNU-MI6STuSqTHFw3NfIkJy6ZzhGq", "link_npwp": "https://drive.google.com/u/0/open?usp=forms_web&id=1YfHUFIEm2jhjPnVQHlKiQ92_8Q4qjLV4", "status": "Aktif"}, {"id": "RTRW-041", "cap_waktu": "2026/11/16 8:13:20 PM GMT+7", "nama": "Yahi Supriatna", "nik": "3201022202770006", "nkk": "3201021703060013", "bpjs": "0001129156874", "tempat_lahir": "Bogor", "tanggal_lahir": "22/02/1977", "agama": "Islam", "pekerjaan": "Karyawan swasta", "status_kawin": "KAWIN TERCATAT", "no_hp": "082113517964", "email": "yahiaquero4451@gmail.com", "unit": "RT", "jabatan": "KETUA RT", "link_ktp": "https://drive.google.com/u/0/open?usp=forms_web&id=1BRZumrQPaZ9ivT4vJaK_hFm2DYJCJ5Gv", "link_kk": "https://drive.google.com/u/0/open?usp=forms_web&id=1ab--XdHOjq5CJ1eCWwZyryd6HlovPVYX", "link_bpjs": "https://drive.google.com/u/0/open?usp=forms_web&id=1UJvH0xvmOymNyfK4WUQW4k8B1L-3aH2Z", "link_foto": "https://drive.google.com/u/0/open?usp=forms_web&id=1yppKGV6B2hXOrp_3rcFdRju3d4stpjnh", "link_npwp": "https://drive.google.com/u/0/open?usp=forms_web&id=1bZyffBTNTQ3GR29Ws3YAaMzkwcb4Q3rH", "status": "Aktif"}, {"id": "RTRW-042", "cap_waktu": "2026/11/16 8:19:27 PM GMT+7", "nama": "Ajis kartono", "nik": "3201073001770003", "nkk": "3201020703130011", "bpjs": "0002094803087", "tempat_lahir": "Tegal", "tanggal_lahir": "30/01/1977", "agama": "Islam", "pekerjaan": "Buruh harian lepas", "status_kawin": "KAWIN TERCATAT", "no_hp": "081384418638", "email": "aziskartono78@gmail.com", "unit": "RT", "jabatan": "KETUA RT", "link_ktp": "https://drive.google.com/u/0/open?usp=forms_web&id=14HMnaUeH6ngMFDNOjk-5bbtDRwpLGURI", "link_kk": "https://drive.google.com/u/0/open?usp=forms_web&id=1ckiW8tcomX7HetSj-F7MPY2oqv4TMbG6", "link_bpjs": "https://drive.google.com/u/0/open?usp=forms_web&id=17XSHQrfLR7HJy0Oqfgslq3Sq8XaT6mID", "link_foto": "https://drive.google.com/u/0/open?usp=forms_web&id=1Y9dTAwt543nwULOkqB8RbZuSOmJSGvgB", "link_npwp": "https://drive.google.com/u/0/open?usp=forms_web&id=1vOIWUlgh0uyhmNjAyi3MEdWUakc2_u5N", "status": "Aktif"}, {"id": "RTRW-043", "cap_waktu": "2026/11/16 8:20:07 PM GMT+7", "nama": "Herman", "nik": "3201022605730005", "nkk": "3201022011070093", "bpjs": "0001126698647", "tempat_lahir": "BOGOR", "tanggal_lahir": "26/05/1973", "agama": "Islam", "pekerjaan": "Karyawan swasta", "status_kawin": "KAWIN TERCATAT", "no_hp": "081382202955", "email": "hermansamad73@gmail.com", "unit": "RT", "jabatan": "KETUA RT", "link_ktp": "https://drive.google.com/u/0/open?usp=forms_web&id=1DCcHwJzSOAtuNBCpvKGCECT8eYJqxLPC", "link_kk": "https://drive.google.com/u/0/open?usp=forms_web&id=1kVDFTn1GThgTLPKEYZtsqzOjAXh9rSJo", "link_bpjs": "https://drive.google.com/u/0/open?usp=forms_web&id=1FLWZ55BFdpWpUiZANvNtdbu_qqIdHbbT", "link_foto": "https://drive.google.com/u/0/open?usp=forms_web&id=1RzXPbs51cU3IwQK7zjZNaGn_0XDfXwwA", "link_npwp": "https://drive.google.com/u/0/open?usp=forms_web&id=1PleDSwkooA3gyN5ftvGBBfT_WF9DStty", "status": "Aktif"}, {"id": "RTRW-044", "cap_waktu": "2026/11/16 8:22:28 PM GMT+7", "nama": "Supratman Hadi Santoso", "nik": "3201020510680020", "nkk": "3201021210120003", "bpjs": "0002084131811", "tempat_lahir": "BOGOR", "tanggal_lahir": "05/10/1968", "agama": "ISLAM", "pekerjaan": "Karyawan swasta", "status_kawin": "KAWIN TERCATAT", "no_hp": "+62 857-1737-8405", "email": "userkhay666@gmail.com", "unit": "RT", "jabatan": "SEKSI KETENTRAMAN, KEAMANAN DAN KETERTIBAN UMUM RT", "link_ktp": "https://drive.google.com/u/0/open?usp=forms_web&id=1vUC2DYP9Y8r3GZ6wp8hAplYu39IDsVuM", "link_kk": "https://drive.google.com/u/0/open?usp=forms_web&id=1QPGfeIT7NPKSSS1p7xUNweN_U_RGL2qI", "link_bpjs": "https://drive.google.com/u/0/open?usp=forms_web&id=1NOWN45pRflFyOrc9P1XjiQ_QL5nG-gj_", "link_foto": "https://drive.google.com/u/0/open?usp=forms_web&id=1E2lZon7o-CzwQ2KL4zIztSf6oBrIrzUQ", "link_npwp": "", "status": "Aktif"}, {"id": "RTRW-045", "cap_waktu": "2026/11/16 8:22:38 PM GMT+7", "nama": "Junaedi", "nik": "3201020406730019", "nkk": "3201022207090044", "bpjs": "0001470016844", "tempat_lahir": "Bogor", "tanggal_lahir": "04/06/1973", "agama": "Islam", "pekerjaan": "Tidak bekerja", "status_kawin": "KAWIN TIDAK TERCATAT", "no_hp": "0895384262311", "email": "junaedijunet753@gmail.com", "unit": "RT", "jabatan": "KETUA RT", "link_ktp": "https://drive.google.com/u/0/open?usp=forms_web&id=1ykq6Y3UQkp0FL4uHOmygGqTOSqjXTGAI", "link_kk": "https://drive.google.com/u/0/open?usp=forms_web&id=1zhMPOFVSM1Drz_l9l-HCp4T6TPEn3M1E", "link_bpjs": "https://drive.google.com/u/0/open?usp=forms_web&id=1vwTbeD1pcLc_4juwL8X--l7g-cNnHuBa", "link_foto": "https://drive.google.com/u/0/open?usp=forms_web&id=1xwGNN6aJTiJVzdW4g4cMGrXrYDasLQkw", "link_npwp": "https://drive.google.com/u/0/open?usp=forms_web&id=1JiWAZ6fyClwVn4Pr-7iSMCQBjpEVDe3g", "status": "Aktif"}, {"id": "RTRW-046", "cap_waktu": "2026/11/16 8:38:13 PM GMT+7", "nama": "Nuryasa", "nik": "3201021704680001", "nkk": "320102210404029", "bpjs": "0001650228917", "tempat_lahir": "BOGOR", "tanggal_lahir": "17/04/1968", "agama": "Islam", "pekerjaan": "Tidak bekerja", "status_kawin": "KAWIN TERCATAT", "no_hp": "081380327775", "email": "nuryasa1968@gmail.com", "unit": "RT", "jabatan": "KETUA RT", "link_ktp": "https://drive.google.com/u/0/open?usp=forms_web&id=1LNSMEzswNJrc1ZX33g8wBOUg0BvinnUp", "link_kk": "https://drive.google.com/u/0/open?usp=forms_web&id=1x9DXiOE_niob7nxV8hgi9Zdz7lm6Orab", "link_bpjs": "https://drive.google.com/u/0/open?usp=forms_web&id=1WjPfIQJk-zqjVo_56i7E8lkpkP7FWi5O", "link_foto": "https://drive.google.com/u/0/open?usp=forms_web&id=1emQlN9Vk3QW2FyKbBMHo7IIl9R2pKnHV", "link_npwp": "https://drive.google.com/u/0/open?usp=forms_web&id=12sdlCd39PitJssSB9fgtA4iAUUxfS0d7", "status": "Aktif"}, {"id": "RTRW-047", "cap_waktu": "2026/11/16 8:39:46 PM GMT+7", "nama": "Fajar hidayatulloh", "nik": "3201022011760001", "nkk": "3201020801030053", "bpjs": "0001623376179", "tempat_lahir": "Lampung", "tanggal_lahir": "20/11/1976", "agama": "islam", "pekerjaan": "karyawan swasta", "status_kawin": "KAWIN TERCATAT", "no_hp": "085215394113", "email": "Fajarhidayatulloh 2011@gmail,com", "unit": "RT", "jabatan": "KETUA RT", "link_ktp": "https://drive.google.com/u/0/open?usp=forms_web&id=1oHKSCezM_hNDTqVgWIT9c4xWZD9TFVLY", "link_kk": "https://drive.google.com/u/0/open?usp=forms_web&id=1oXPFBPaIMJkoi60JesaPC3UIE_iXHWMI", "link_bpjs": "https://drive.google.com/u/0/open?usp=forms_web&id=1tKd4gKM5A-erNAv8jtwCUecuFZO2sehK", "link_foto": "https://drive.google.com/u/0/open?usp=forms_web&id=1ypSNPRkYfjjsHw9wKWIXL8MY5Os_I8eT", "link_npwp": "https://drive.google.com/u/0/open?usp=forms_web&id=1g3fcrq1aelphowofgwVnSQKnzQamYkjq", "status": "Aktif"}, {"id": "RTRW-048", "cap_waktu": "2026/11/16 8:39:47 PM GMT+7", "nama": "Fajar hidayatulloh", "nik": "3201022011760001", "nkk": "3201020801030053", "bpjs": "0001623376179", "tempat_lahir": "Lampung", "tanggal_lahir": "20/11/1976", "agama": "islam", "pekerjaan": "karyawan swasta", "status_kawin": "KAWIN TERCATAT", "no_hp": "085215394113", "email": "Fajarhidayatulloh 2011@gmail,com", "unit": "RT", "jabatan": "KETUA RT", "link_ktp": "https://drive.google.com/u/0/open?usp=forms_web&id=1FBdBM2Ob3EdnIrM5gt4KHlS2FFHIRJlx", "link_kk": "https://drive.google.com/u/0/open?usp=forms_web&id=1roGvkQ0ISz6LelW6MqIMMEvQkb0qYRhB", "link_bpjs": "https://drive.google.com/u/0/open?usp=forms_web&id=16XV3pM39FC2UUp7Z_mYQEydYDVvpMwjY", "link_foto": "https://drive.google.com/u/0/open?usp=forms_web&id=1ZtXPWn6fa2mMjz_lPPK7XwUxNJhLxmcI", "link_npwp": "https://drive.google.com/u/0/open?usp=forms_web&id=1yz2Qb3CIaCrNCgwcgpcXwYRdw5MF4kJ-", "status": "Aktif"}, {"id": "RTRW-049", "cap_waktu": "2026/11/16 8:39:56 PM GMT+7", "nama": "Fajar hidayatulloh", "nik": "3201022011760001", "nkk": "3201020801030053", "bpjs": "0001623376179", "tempat_lahir": "Lampung", "tanggal_lahir": "20/11/1976", "agama": "islam", "pekerjaan": "karyawan swasta", "status_kawin": "KAWIN TERCATAT", "no_hp": "085215394113", "email": "Fajarhidayatulloh 2011@gmail,com", "unit": "RT", "jabatan": "KETUA RT", "link_ktp": "https://drive.google.com/u/0/open?usp=forms_web&id=1aWZ4X9NndZ-Zbm7OQRkwB8Y3SEpld0jB", "link_kk": "https://drive.google.com/u/0/open?usp=forms_web&id=1Dk5VkpXwd6lC6Jo9IiYWjmlhBshMCaJi", "link_bpjs": "https://drive.google.com/u/0/open?usp=forms_web&id=13DV469jckodZFbhhVoeNJmDQA2uZ3Ud5", "link_foto": "https://drive.google.com/u/0/open?usp=forms_web&id=1Qzw_uttIVk2aRWJmPy0x1t24eeARYRLL", "link_npwp": "https://drive.google.com/u/0/open?usp=forms_web&id=1zCSDQNFDHJYaUPGYAkCNuiGxUuOJLKGo", "status": "Aktif"}, {"id": "RTRW-050", "cap_waktu": "2026/11/16 8:45:00 PM GMT+7", "nama": "RIYANTO", "nik": "3174102704890004", "nkk": "3174100706131001", "bpjs": "0001145361025", "tempat_lahir": "JAKARTA", "tanggal_lahir": "27/04/1989", "agama": "ISLAM", "pekerjaan": "KARYAWAN SWASTA", "status_kawin": "KAWIN TERCATAT", "no_hp": "081380676690", "email": "riyanto.riyanto989@gmail.com", "unit": "RT", "jabatan": "KETUA RT", "link_ktp": "https://drive.google.com/u/0/open?usp=forms_web&id=1TH5IHApm0qyIxtcgKBqQsH0AP_2sKbx3", "link_kk": "https://drive.google.com/u/0/open?usp=forms_web&id=1s2r2EhWYLr5r1m3YHvjAoZO6OW-0dXYW", "link_bpjs": "https://drive.google.com/u/0/open?usp=forms_web&id=1yYKHg-hYPg9sq6qfoiUJCihHfdnO9Wss", "link_foto": "https://drive.google.com/u/0/open?usp=forms_web&id=1iaEkSiUTIjpP8_KkztP6jsY-DI0r6Ldy", "link_npwp": "https://drive.google.com/u/0/open?usp=forms_web&id=1ht40NdIeHiP01cNWul7dNh-6O_ziiNzt", "status": "Aktif"}, {"id": "RTRW-051", "cap_waktu": "2026/11/16 8:46:59 PM GMT+7", "nama": "Fajar hidayatulloh", "nik": "3201022011760001", "nkk": "3201020801030053", "bpjs": "0001623376179", "tempat_lahir": "lampung", "tanggal_lahir": "20/11/1976", "agama": "islam", "pekerjaan": "karyawan swasta", "status_kawin": "KAWIN TERCATAT", "no_hp": "085215394113", "email": "Fajarhidayatulloh2011@gmail.com", "unit": "RT", "jabatan": "KETUA RT", "link_ktp": "https://drive.google.com/u/0/open?usp=forms_web&id=1KpBQh5WWSEwcOpegFjaIYeuEiIFp1Goe", "link_kk": "https://drive.google.com/u/0/open?usp=forms_web&id=11ZFEUzOS8p-I839q-Io7CW2XFuCM-R4p", "link_bpjs": "https://drive.google.com/u/0/open?usp=forms_web&id=1z0D_tBtqjIf8vqUiG1fOXGUzAgTJ3_3n", "link_foto": "https://drive.google.com/u/0/open?usp=forms_web&id=1GocqHB3kS2U-2kQcPpcM995o6GFz7duE", "link_npwp": "https://drive.google.com/u/0/open?usp=forms_web&id=1nTSMv2OyspIZWfrNbcQlCic-8G4lRC5t", "status": "Aktif"}, {"id": "RTRW-052", "cap_waktu": "2026/11/16 8:59:44 PM GMT+7", "nama": "SAHRUL BIN PURA", "nik": "3201021506780019", "nkk": "3201021407080052", "bpjs": "0001129132269", "tempat_lahir": "LAMPUNG SELATAN", "tanggal_lahir": "15/06/1978", "agama": "ISLAM", "pekerjaan": "KARYAWAN SWASTA", "status_kawin": "KAWIN TERCATAT", "no_hp": "081297093738", "email": "sahrulbinpura@gmail.com", "unit": "RT", "jabatan": "KETUA RT", "link_ktp": "https://drive.google.com/u/0/open?usp=forms_web&id=11vp5hyn-RcySXVwuajKFrYBT10guLR5v", "link_kk": "https://drive.google.com/u/0/open?usp=forms_web&id=1YPUnixmtqgqhB8gQf6UCBUIkr88cUpCH", "link_bpjs": "https://drive.google.com/u/0/open?usp=forms_web&id=1Nt8UtVJXDrDazsvqzobSm0XihSLJwvoT", "link_foto": "https://drive.google.com/u/0/open?usp=forms_web&id=1HaBvU2be7ZaWTntttDdxnGFoo7Y1w7F6", "link_npwp": "https://drive.google.com/u/0/open?usp=forms_web&id=1p8eRQpMN0lhMl_oRXJd0xn7yCn9gqeW2", "status": "Aktif"}, {"id": "RTRW-053", "cap_waktu": "2026/11/16 9:06:41 PM GMT+7", "nama": "Dede supriatna", "nik": "3201021303010007", "nkk": "3201022704260006", "bpjs": "25147490012", "tempat_lahir": "Bogor", "tanggal_lahir": "13/03/2001", "agama": "Islam", "pekerjaan": "Karyawan swasta", "status_kawin": "KAWIN TERCATAT", "no_hp": "088212118605", "email": "dedesprtna13@gmail.com", "unit": "RW", "jabatan": "SEKSI PEMUDA, OLAHRAGA DAN KESENIAN RW", "link_ktp": "https://drive.google.com/u/0/open?usp=forms_web&id=1YvOa-MhJOuLqXdVh9Ky4PonTqRBG3xqO", "link_kk": "https://drive.google.com/u/0/open?usp=forms_web&id=1lzm5mW_cCOkK6ceW2_zlfZjmAzv1ysqt", "link_bpjs": "https://drive.google.com/u/0/open?usp=forms_web&id=1CcZxSpR0Kj1gAX2t_pwb--M-B45spieQ", "link_foto": "https://drive.google.com/u/0/open?usp=forms_web&id=1s1DuEWh5bKNJAo2WZUpewXsMt9UM9h30", "link_npwp": "https://drive.google.com/u/0/open?usp=forms_web&id=1pNNilHgbTPa-88DC_FrEKWcM30oFmopf", "status": "Aktif"}, {"id": "RTRW-054", "cap_waktu": "2026/11/16 9:13:37 PM GMT+7", "nama": "Sasiyanto", "nik": "3201020304770004", "nkk": "3201022511050046", "bpjs": "3201020304770004", "tempat_lahir": "Semarang", "tanggal_lahir": "03-04-1977", "agama": "Islam", "pekerjaan": "Karyawan swasta", "status_kawin": "KAWIN TERCATAT", "no_hp": "081219203231", "email": "khabidin112233@gmail.com", "unit": "RT", "jabatan": "BENDAHARA RT", "link_ktp": "https://drive.google.com/u/0/open?usp=forms_web&id=1zeulYfl0DeGseAHr7tKlYcPzhIBW5Ab4", "link_kk": "https://drive.google.com/u/0/open?usp=forms_web&id=1w-BazlStdPT4YBRE52r5SpTKwA8xpdAe", "link_bpjs": "https://drive.google.com/u/0/open?usp=forms_web&id=1coUWgymdiG-ra5apFwIbQDuaKJyBnktM", "link_foto": "https://drive.google.com/u/0/open?usp=forms_web&id=1pUFH1h64UJgqrCY8hnn99ABuKyPr63Mo", "link_npwp": "", "status": "Aktif"}, {"id": "RTRW-055", "cap_waktu": "2026/11/16 9:13:54 PM GMT+7", "nama": "DIKI ROSYADI SHOLEH, S.H.", "nik": "3201022001020010", "nkk": "3201022011120016", "bpjs": "0001645851868", "tempat_lahir": "BOGOR", "tanggal_lahir": "20-01-2002", "agama": "ISLAM", "pekerjaan": "PELAJAR/MAHASISWA", "status_kawin": "BELUM KAWIN", "no_hp": "083877796941", "email": "rosyadisholeh45@gmail.com", "unit": "RT", "jabatan": "SEKRETARIS RT", "link_ktp": "https://drive.google.com/u/0/open?usp=forms_web&id=1FCmP-I84JDJB50kNIOhaB9QpDzDHk-tV", "link_kk": "https://drive.google.com/u/0/open?usp=forms_web&id=1jtSKg7_1ivhe27im8o05uvw9sP1V3v28", "link_bpjs": "https://drive.google.com/u/0/open?usp=forms_web&id=1oJAqY7cyL2j99o2EMJfJiDSZjFczcbNS", "link_foto": "https://drive.google.com/u/0/open?usp=forms_web&id=1Rc6OVIzDtOwHdNpAXW2pGkoCBncq9TmX", "link_npwp": "https://drive.google.com/u/0/open?usp=forms_web&id=1eEH7vJ4nzjP5lt16tziKz2UM8LMhykkQ", "status": "Aktif"}, {"id": "RTRW-056", "cap_waktu": "2026/11/16 9:16:55 PM GMT+7", "nama": "Salman alfarizi", "nik": "3201021608930001", "nkk": "3201021610020023", "bpjs": "0001729510661", "tempat_lahir": "Bogor", "tanggal_lahir": "16/08/1993", "agama": "IsIam", "pekerjaan": "wirausaha", "status_kawin": "BELUM KAWIN", "no_hp": "083819000099", "email": "salmanmn8@gmail.com", "unit": "RT", "jabatan": "SEKRETARIS RT", "link_ktp": "https://drive.google.com/u/0/open?usp=forms_web&id=1SCwtFHZXl0UgQmKLsN9D9UPEflgp3v_s", "link_kk": "https://drive.google.com/u/0/open?usp=forms_web&id=1UYIR7x_RrE9hZOGfjGgqyU2sJi_f2_hz", "link_bpjs": "https://drive.google.com/u/0/open?usp=forms_web&id=1nqtwWXmSnyO0w25MEfXwUsmRYvVO3AV5", "link_foto": "https://drive.google.com/u/0/open?usp=forms_web&id=1rOOH735Ccg7IG626VG0YJm2lMumXtzb1", "link_npwp": "https://drive.google.com/u/0/open?usp=forms_web&id=1Sr-iHCYoqZKtO8kf7CCCdA1ag8tiMzfk", "status": "Aktif"}, {"id": "RTRW-057", "cap_waktu": "2026/11/16 9:22:20 PM GMT+7", "nama": "GUN GUN GUNAWAN", "nik": "3201020401850007", "nkk": "3201020612120019", "bpjs": "000380051223", "tempat_lahir": "CIANJUR", "tanggal_lahir": "04/01/1985", "agama": "ISLAM", "pekerjaan": "BURUH HARIAN LEPAS", "status_kawin": "KAWIN TERCATAT", "no_hp": "085319549873", "email": "gg0223852@gmail.com", "unit": "RT", "jabatan": "SEKRETARIS RT", "link_ktp": "https://drive.google.com/u/0/open?usp=forms_web&id=1PSwIYuxaXWkEC5WjiGzxlFfkzMJgsUNg", "link_kk": "https://drive.google.com/u/0/open?usp=forms_web&id=1XzNSqweHWA2fnOzW3TYNNy1jkL-1eZJK", "link_bpjs": "https://drive.google.com/u/0/open?usp=forms_web&id=14GCuJxaMfxqou-LM4s6Kp_SZ5SBefTmg", "link_foto": "https://drive.google.com/u/0/open?usp=forms_web&id=1IZjCUwjNKuyvamhdoSvKFhnTwi_EuvEk", "link_npwp": "https://drive.google.com/u/0/open?usp=forms_web&id=14ZjMYpxMm-oHvrF6YzIr9PA3rozRdO6-", "status": "Aktif"}, {"id": "RTRW-058", "cap_waktu": "2026/11/16 9:28:17 PM GMT+7", "nama": "yadi hardiansyah", "nik": "3201021803910002", "nkk": "3201020606160011", "bpjs": "23163509807", "tempat_lahir": "bogor", "tanggal_lahir": "18/03/1991", "agama": "islam", "pekerjaan": "karyawan swasta", "status_kawin": "KAWIN TERCATAT", "no_hp": "08998963150", "email": "hardiansyahyadi014@gmail.com", "unit": "RT", "jabatan": "SEKSI PEMUDA, OLAHRAGA DAN KESENIAN RT", "link_ktp": "https://drive.google.com/u/0/open?usp=forms_web&id=1yoZCWGzoMo_sVcu41mSGD2hJkQvn2XBe", "link_kk": "https://drive.google.com/u/0/open?usp=forms_web&id=1NOJxMgWRETjZQg2P3EXsOiOZtu2i9seo", "link_bpjs": "https://drive.google.com/u/0/open?usp=forms_web&id=1DjMcv6pG5FJka0y-MZWeeXrAWvBn8bWU", "link_foto": "https://drive.google.com/u/0/open?usp=forms_web&id=1Ugweflq9u8dx0XOAAPO2Y_CHjBZW8wKJ", "link_npwp": "https://drive.google.com/u/0/open?usp=forms_web&id=1CRqIN7wreero8VW5A8ohorkmz5SX5j2w", "status": "Aktif"}, {"id": "RTRW-059", "cap_waktu": "2026/11/16 9:30:21 PM GMT+7", "nama": "Feri febriano", "nik": "3201022102850004", "nkk": "3201020801090132", "bpjs": "0001804288959", "tempat_lahir": "SERANG", "tanggal_lahir": "21/02/1985", "agama": "Islam", "pekerjaan": "Karyawan swasta", "status_kawin": "KAWIN TERCATAT", "no_hp": "08889617891", "email": "Febrianoferi@gmail.com", "unit": "RT", "jabatan": "SEKRETARIS RT", "link_ktp": "https://drive.google.com/u/0/open?usp=forms_web&id=1phLfg3RBeo51XOxD7RnY28LNipdy05md", "link_kk": "https://drive.google.com/u/0/open?usp=forms_web&id=1ZeN3wDd0C2QWQzj-FtXS9SAyFcFC1zuJ", "link_bpjs": "https://drive.google.com/u/0/open?usp=forms_web&id=1_hc0IPK0r_rAxSu3_CTvxMHcysVBP25b", "link_foto": "https://drive.google.com/u/0/open?usp=forms_web&id=1GK3FxwyUvhk-5gp4eI3Xz3eeR_OdQdy5", "link_npwp": "https://drive.google.com/u/0/open?usp=forms_web&id=1Ikt15pbvO23dnbJB1dsm2oRyfaCIrMZe", "status": "Aktif"}, {"id": "RTRW-060", "cap_waktu": "2026/11/16 9:30:33 PM GMT+7", "nama": "Kamaludin", "nik": "3201021501770014", "nkk": "3201022704090034", "bpjs": "0001641713073", "tempat_lahir": "BOGOR", "tanggal_lahir": "15/01/1977", "agama": "IsIam", "pekerjaan": "Pegawai swasta", "status_kawin": "KAWIN TERCATAT", "no_hp": "082111856742", "email": "kamaludincicadas05@gmail.com", "unit": "RW", "jabatan": "KETUA RW", "link_ktp": "https://drive.google.com/u/0/open?usp=forms_web&id=1DqgLhi3xxMw3xpBw97iqvzIn1ThUqECL", "link_kk": "https://drive.google.com/u/0/open?usp=forms_web&id=1iTslbsevRhp0CjGTiqZzMKK1FGy3VoPm", "link_bpjs": "https://drive.google.com/u/0/open?usp=forms_web&id=1M3XGnx9gTbusC-Q0hglWiSUtfv9I4dbp", "link_foto": "https://drive.google.com/u/0/open?usp=forms_web&id=1IAQmmCMmK0dRTN4_9tBTPMAJycLXYGIZ", "link_npwp": "https://drive.google.com/u/0/open?usp=forms_web&id=1d311NlnWdBf3i7tu0hkjndMwgGIY99hW", "status": "Aktif"}, {"id": "RTRW-061", "cap_waktu": "2026/11/16 9:35:07 PM GMT+7", "nama": "Andrian fauzi baktir", "nik": "3201071711900004", "nkk": "3201022508210019", "bpjs": "0001298117632", "tempat_lahir": "Bogor", "tanggal_lahir": "17-11-1990", "agama": "Islam", "pekerjaan": "Karyawan honorer", "status_kawin": "KAWIN TERCATAT", "no_hp": "085773363591", "email": "khabidin112233@gmail.com", "unit": "RT", "jabatan": "SEKRETARIS RT", "link_ktp": "https://drive.google.com/u/0/open?usp=forms_web&id=1pZNFUAu0sQjWGEqSZEYDeAOII7JwHG23", "link_kk": "https://drive.google.com/u/0/open?usp=forms_web&id=1OvDEYNFGZ6luDDb94GkXc0rph8Fv9t43", "link_bpjs": "https://drive.google.com/u/0/open?usp=forms_web&id=11W6R-U2rW0Hx7w3RKRTYk401Vb7V0Tn6", "link_foto": "https://drive.google.com/u/0/open?usp=forms_web&id=1QuiuO_RPyXddX4_edcaHAqLvrFQ3c0sc", "link_npwp": "", "status": "Aktif"}, {"id": "RTRW-062", "cap_waktu": "2026/11/16 9:36:14 PM GMT+7", "nama": "URIP SUNANDAR", "nik": "3201020706770016", "nkk": "3201021610080025", "bpjs": "0001829077503", "tempat_lahir": "Bogor", "tanggal_lahir": "Bogor 07061977", "agama": "Islam", "pekerjaan": "Karyawan swasta", "status_kawin": "KAWIN TERCATAT", "no_hp": "085810843918", "email": "uriprw06@gmail.com", "unit": "RW", "jabatan": "KETUA RW", "link_ktp": "https://drive.google.com/u/0/open?usp=forms_web&id=1-BPxWdFDi4yasFP_8pgLA1-TQW9jtb1P", "link_kk": "https://drive.google.com/u/0/open?usp=forms_web&id=1TYc-byy8Uw_ZdmYi7OYgl_nWnAcnVnq7", "link_bpjs": "https://drive.google.com/u/0/open?usp=forms_web&id=1S7-dm0wTLpB-wPH7-4VnAEImxRRxK3a2", "link_foto": "https://drive.google.com/u/0/open?usp=forms_web&id=1K6gHO9cXttgZGMzERtRHbwIFWi9ERPJW", "link_npwp": "https://drive.google.com/u/0/open?usp=forms_web&id=13exCuR3i3jzl6JSeUMtZ0XK1v3di6Dez", "status": "Aktif"}, {"id": "RTRW-063", "cap_waktu": "2026/11/16 9:58:55 PM GMT+7", "nama": "IMAN RACHMAN", "nik": "3201020804770004", "nkk": "3201020402050015", "bpjs": "0001129189217", "tempat_lahir": "SUKABUMI", "tanggal_lahir": "08/04/1977", "agama": "Islam", "pekerjaan": "Karyawan swasta", "status_kawin": "KAWIN TERCATAT", "no_hp": "085951812910", "email": "syahrachman018@gmail.com", "unit": "RW", "jabatan": "SEKRETARIS RW", "link_ktp": "https://drive.google.com/u/0/open?usp=forms_web&id=1s5Vs51yjRTCz6gKG-Od1s9V71gdThcPR", "link_kk": "https://drive.google.com/u/0/open?usp=forms_web&id=1N9IvUIRhLyN-1y64eZiB2SKgs5_X-DY8", "link_bpjs": "https://drive.google.com/u/0/open?usp=forms_web&id=1vKEsUoMx4Ue43Kr2klFwhhT4lolJqJyi", "link_foto": "https://drive.google.com/u/0/open?usp=forms_web&id=1iqJEyKb-Vto4-zC0XCn2pDwFpwGn6str", "link_npwp": "", "status": "Aktif"}, {"id": "RTRW-064", "cap_waktu": "2026/11/16 10:18:34 PM GMT+7", "nama": "Muhamad isak", "nik": "3201022112800007", "nkk": "3201021009131046", "bpjs": "0001468464478", "tempat_lahir": "*BOGOR", "tanggal_lahir": "21/12/1981*", "agama": "Islam*", "pekerjaan": "Buruh harian lepas*", "status_kawin": "KAWIN TERCATAT", "no_hp": "*085215677720", "email": "*muhamadisak21121981@gmail.com", "unit": "RW", "jabatan": "KETUA RW", "link_ktp": "https://drive.google.com/u/0/open?usp=forms_web&id=15gME8fXN2Jtrg0-ybXv2DEDqe39JFFxC", "link_kk": "https://drive.google.com/u/0/open?usp=forms_web&id=1gznROwn07SfOXkSBzJVRe6rBNBxUU-AT", "link_bpjs": "https://drive.google.com/u/0/open?usp=forms_web&id=1qJr6lhnX4VKpoSITeBOetHGjbEiAYm-D", "link_foto": "https://drive.google.com/u/0/open?usp=forms_web&id=1ibInv4kxorbsamY0ZL091St1RS_2TU-R", "link_npwp": "https://drive.google.com/u/0/open?usp=forms_web&id=18cQyssIA_QBdqtZJO8Vw4kQafrpmTztV", "status": "Aktif"}, {"id": "RTRW-065", "cap_waktu": "2026/11/16 10:19:07 PM GMT+7", "nama": "Indra Kurnia Pamungkas", "nik": "3201022603820006", "nkk": "3201020102130024", "bpjs": "0000204018952", "tempat_lahir": "JAKARTA", "tanggal_lahir": "26/03/1982", "agama": "ISLAM", "pekerjaan": "ASN", "status_kawin": "KAWIN TERCATAT", "no_hp": "081585048656", "email": "pamungkazz@gmail.com", "unit": "RT", "jabatan": "SEKRETARIS RT", "link_ktp": "https://drive.google.com/u/0/open?usp=forms_web&id=1p2BctRG_sQ6v4nmrLw6wG3h8fngEyq3s", "link_kk": "https://drive.google.com/u/0/open?usp=forms_web&id=1ETVlBHJyrocTRzFx87KJwg6fPvJ2Sz9G", "link_bpjs": "https://drive.google.com/u/0/open?usp=forms_web&id=1t8m_wdHBjpPR54eXuKUCr7FaTC6nVe93", "link_foto": "https://drive.google.com/u/0/open?usp=forms_web&id=12hyvJG8fl4fC4iq8ThV6FaHPjdmCrNDf", "link_npwp": "https://drive.google.com/u/0/open?usp=forms_web&id=15XAPipEHi2HxV1cYczudc1zypeYN9fAC", "status": "Aktif"}, {"id": "RTRW-066", "cap_waktu": "2026/11/16 10:54:02 PM GMT+7", "nama": "Amin Hasanudin", "nik": "3201020509810003", "nkk": "3201020609060064", "bpjs": "0001158401068", "tempat_lahir": "Bogor", "tanggal_lahir": "05/09/1981", "agama": "Islam", "pekerjaan": "Buruh harian lepas", "status_kawin": "KAWIN TERCATAT", "no_hp": "089619461481", "email": "amin.hasanudin01@gmail.com", "unit": "RT", "jabatan": "KETUA RT", "link_ktp": "https://drive.google.com/u/0/open?usp=forms_web&id=1FzNMVUysUvp2TK6scLNxaiTeFnS30QhW", "link_kk": "https://drive.google.com/u/0/open?usp=forms_web&id=1fn8FFPn5xjbHN-58Fd8BH7gqxRTbq-xd", "link_bpjs": "https://drive.google.com/u/0/open?usp=forms_web&id=1ootek2YppBH8THBvH6y6LsWqeHyjkO46", "link_foto": "https://drive.google.com/u/0/open?usp=forms_web&id=1JC-Y2WeiVRt34QAZZnSDtjcArjV-CYWG", "link_npwp": "https://drive.google.com/u/0/open?usp=forms_web&id=1-I25Jb2vnVC3MmPs3qujT4LXaP6nIZXO", "status": "Aktif"}, {"id": "RTRW-067", "cap_waktu": "2026/11/16 11:13:36 PM GMT+7", "nama": "SOLIHIN", "nik": "3201020408750012", "nkk": "3201020610090031", "bpjs": "0003426086957", "tempat_lahir": "Cilacap", "tanggal_lahir": "04/08/1975", "agama": "Islam", "pekerjaan": "Buruh harian lepas", "status_kawin": "KAWIN TERCATAT", "no_hp": "087794548950", "email": "sgp12156@gmail.com", "unit": "RT", "jabatan": "KETUA RT", "link_ktp": "https://drive.google.com/u/0/open?usp=forms_web&id=1ZLcSiqS3B1azOsYiJ1rxAb5GHaINJwKL", "link_kk": "https://drive.google.com/u/0/open?usp=forms_web&id=1AnTDDwFzmW1tpaP0agh5gChk_EFthpy3", "link_bpjs": "https://drive.google.com/u/0/open?usp=forms_web&id=16L9X7eBMtk8QBKbMpgxO6-EuyrknRNYM", "link_foto": "https://drive.google.com/u/0/open?usp=forms_web&id=1fitUWLt_8MEBMTsBNh7TuYcRR7IWJrft", "link_npwp": "https://drive.google.com/u/0/open?usp=forms_web&id=1Xop3coM2ZHQ8gASqC82sfcYbxdIw2UGT", "status": "Aktif"}, {"id": "RTRW-068", "cap_waktu": "2026/11/16 11:23:47 PM GMT+7", "nama": "Iwan Setiyadi", "nik": "3201021208690008", "nkk": "3201022908060080", "bpjs": "0001620863638", "tempat_lahir": "Kebumen", "tanggal_lahir": "12/08/1969", "agama": "Islam", "pekerjaan": "Pensiunan", "status_kawin": "KAWIN TERCATAT", "no_hp": "081386943286", "email": "iwansetiyadi96@gmail.com", "unit": "RT", "jabatan": "KETUA RT", "link_ktp": "https://drive.google.com/u/0/open?usp=forms_web&id=1VWTTlnTO7qAbcU4pTUeuMaZv_HSnT3pr", "link_kk": "https://drive.google.com/u/0/open?usp=forms_web&id=1F7s3g1EXOC_frrxk1gRqZuC4wVs2vk_w", "link_bpjs": "https://drive.google.com/u/0/open?usp=forms_web&id=1-fjH3zDvjh7i2gWmHrV5J50UVRdHEf2G", "link_foto": "https://drive.google.com/u/0/open?usp=forms_web&id=1TDYcAsl3cUgUvalikvJB0BinlvAunYqT", "link_npwp": "", "status": "Aktif"}, {"id": "RTRW-069", "cap_waktu": "2026/11/17 7:01:42 AM GMT+7", "nama": "Novian", "nik": "3201021411900002", "nkk": "3201021806150005", "bpjs": "0001150293058", "tempat_lahir": "Bogor", "tanggal_lahir": "14/11/1990", "agama": "Islam", "pekerjaan": "wiraswasta", "status_kawin": "KAWIN TERCATAT", "no_hp": "082117245014", "email": "noviannovian925@gmail.com", "unit": "RT", "jabatan": "SEKRETARIS RT", "link_ktp": "https://drive.google.com/u/0/open?usp=forms_web&id=15UDn6m59Ncd9XMZNHFVHtt9izx814uNT", "link_kk": "https://drive.google.com/u/0/open?usp=forms_web&id=1s3DpYvYkp7gDKqc9BbMwbf4tmfZhfnL0", "link_bpjs": "https://drive.google.com/u/0/open?usp=forms_web&id=1K6BUjnbNPI02oM3XUKlwhOm-QHIpURko", "link_foto": "https://drive.google.com/u/0/open?usp=forms_web&id=1ao2FjCKqNkf3SZJ1cK4FLJhhixX_nHAK", "link_npwp": "https://drive.google.com/u/0/open?usp=forms_web&id=1R7eqdKNZGjDs0TiImyHUOZSMr9ScNMEj", "status": "Aktif"}, {"id": "RTRW-070", "cap_waktu": "2026/11/17 7:25:59 AM GMT+7", "nama": "Sukadi", "nik": "3201022807850004", "nkk": "3201021012140005", "bpjs": "0001626891862", "tempat_lahir": "Boyolali", "tanggal_lahir": "28/07/1984", "agama": "Islam", "pekerjaan": "Karyawan swasta", "status_kawin": "KAWIN TERCATAT", "no_hp": "083811956042", "email": "sukadikabul@gmail.com", "unit": "RT", "jabatan": "KETUA RT", "link_ktp": "https://drive.google.com/u/0/open?usp=forms_web&id=1qFR7_rB3seVRSYTL6L4FzfFZvIGp56cB", "link_kk": "https://drive.google.com/u/0/open?usp=forms_web&id=1KPBm_ZbhRnmtcAZyqb2ON5mOCnEs7PGD", "link_bpjs": "https://drive.google.com/u/0/open?usp=forms_web&id=1JNKPBg_y8obnZpPJb1GVDfN25u6xRgch", "link_foto": "https://drive.google.com/u/0/open?usp=forms_web&id=1fZhgDqta0MVSPZNv6ytlOc6MPSWRlIDT", "link_npwp": "https://drive.google.com/u/0/open?usp=forms_web&id=1QiZ8wb6QZvNQRpiLos2ka1PJ6TqlALis", "status": "Aktif"}, {"id": "RTRW-071", "cap_waktu": "2026/11/17 7:26:10 AM GMT+7", "nama": "DHIKA WAHYU NURI AGUSTIANTO", "nik": "3603191008910001", "nkk": "3201020605140012", "bpjs": "0001616824664", "tempat_lahir": "BLORA", "tanggal_lahir": "08/10/1991", "agama": "ISLAM", "pekerjaan": "KARYAWAN", "status_kawin": "KAWIN TERCATAT", "no_hp": "085810237936", "email": "dhika100891@gmail.com", "unit": "RT", "jabatan": "SEKRETARIS RT", "link_ktp": "https://drive.google.com/u/0/open?usp=forms_web&id=1xH1dz3aIROro9FHhNzm-ijTmxYiZ-_bA", "link_kk": "https://drive.google.com/u/0/open?usp=forms_web&id=1ZcTPGWqJtHOOWhbUSOm2mZFAZxNDa1i6", "link_bpjs": "https://drive.google.com/u/0/open?usp=forms_web&id=17NHTuNKDWHDaVQRyEFkLh1rrxnb6RcCu", "link_foto": "https://drive.google.com/u/0/open?usp=forms_web&id=1pTHGckU0_zE3rv3QN1NjSp3lKbkQaSAZ", "link_npwp": "https://drive.google.com/u/0/open?usp=forms_web&id=1wW8HtDGwcx9OaAot8nmx9j5bfNYHPvVY", "status": "Aktif"}, {"id": "RTRW-072", "cap_waktu": "2026/11/17 7:29:12 AM GMT+7", "nama": "Pujiono", "nik": "3201021605750007", "nkk": "320102120670078", "bpjs": "0001645037335", "tempat_lahir": "Campang tiga", "tanggal_lahir": "16/05/1975", "agama": "Islam", "pekerjaan": "Buruh harian lepas", "status_kawin": "KAWIN TERCATAT", "no_hp": "081380915079", "email": "fujiono68@gmail.com", "unit": "RT", "jabatan": "KETUA RT", "link_ktp": "https://drive.google.com/u/0/open?usp=forms_web&id=1e0744v0yUUbD4K9gviVF_e-uNrRNFJti", "link_kk": "https://drive.google.com/u/0/open?usp=forms_web&id=1wmnqeK8X5iGOFUO-gvAB8ZJ9hygQQqZV", "link_bpjs": "https://drive.google.com/u/0/open?usp=forms_web&id=1STA55mExO9VVz2mdVJRGetTOLGXV7umL", "link_foto": "https://drive.google.com/u/0/open?usp=forms_web&id=1deMYvDyh_LCwkckz6KvAy_uG63g4DOPe", "link_npwp": "https://drive.google.com/u/0/open?usp=forms_web&id=1m0GZQ6x6Oj4Uw0SYYt4tCmxa8ZN3hlIs", "status": "Aktif"}, {"id": "RTRW-073", "cap_waktu": "2026/11/17 7:40:19 AM GMT+7", "nama": "Endang Sanjaya", "nik": "3201022004780016", "nkk": "3201021307090069", "bpjs": "0001147393833", "tempat_lahir": "Bogor", "tanggal_lahir": "20/04/1978", "agama": "Islam", "pekerjaan": "Karyawan Swasta", "status_kawin": "KAWIN TERCATAT", "no_hp": "087866280478", "email": "endangsanjaya819.id@gmail.com", "unit": "RT", "jabatan": "KETUA RT", "link_ktp": "https://drive.google.com/u/0/open?usp=forms_web&id=1_hn8XLeRRhYu_yuMhkMeyIJbJc5HbVe3", "link_kk": "https://drive.google.com/u/0/open?usp=forms_web&id=1CU6l-Vil82jEsdrHCkGitxwUdsxAiLto", "link_bpjs": "https://drive.google.com/u/0/open?usp=forms_web&id=1fzKUuEQrTM6zLxGY8k-IH0qQy8RBaQUv", "link_foto": "https://drive.google.com/u/0/open?usp=forms_web&id=1hLL-zOQ9SGIU17R_ApTexMyen9sLCBlP", "link_npwp": "https://drive.google.com/u/0/open?usp=forms_web&id=1YWAVjM8gi-ks5_e9f6S9vqqe1jbLJA9f", "status": "Aktif"}, {"id": "RTRW-074", "cap_waktu": "2026/11/17 7:48:10 AM GMT+7", "nama": "HERMAN KUSWARA", "nik": "3201021912720006", "nkk": "3201023003090062", "bpjs": "0001736327709", "tempat_lahir": "BOGOR", "tanggal_lahir": "19/12/1972", "agama": "ISLAM", "pekerjaan": "BELUM/TIDAK BEKERJA", "status_kawin": "KAWIN TERCATAT", "no_hp": "08129771134", "email": "hermankuswara1972@gmail.com", "unit": "RT", "jabatan": "KETUA RT", "link_ktp": "https://drive.google.com/u/0/open?usp=forms_web&id=1LRB_6VevW7iMjOhzYmwwXLSTQuzvW63O", "link_kk": "https://drive.google.com/u/0/open?usp=forms_web&id=1BZizl5qKrN-ORUf3Lwv56NQqjdIbcjiV", "link_bpjs": "https://drive.google.com/u/0/open?usp=forms_web&id=1BurlT19m-_Zm-ZuGRQD2rN8PIQvHKjas", "link_foto": "https://drive.google.com/u/0/open?usp=forms_web&id=1SmXjhok8REFvZpTq0ov9F7SV2eMXAize", "link_npwp": "https://drive.google.com/u/0/open?usp=forms_web&id=1_34iBej-ZUEUE-EQhDmWU8iOinvkmsDV", "status": "Aktif"}, {"id": "RTRW-075", "cap_waktu": "2026/11/17 7:49:28 AM GMT+7", "nama": "ADE RAMDANI", "nik": "3201020109750007", "nkk": "3201022506070054", "bpjs": "0001865972542", "tempat_lahir": "SUKABUMI", "tanggal_lahir": "01/09/1975", "agama": "ISLAM", "pekerjaan": "BURUH HARIAN LEPAS", "status_kawin": "KAWIN TERCATAT", "no_hp": "087872222311", "email": "aderamdani75@gmail.com", "unit": "RT", "jabatan": "KETUA RT", "link_ktp": "https://drive.google.com/u/0/open?usp=forms_web&id=1Y7qDVIubiybWGfV3um-Bir8W3yIX0wXh", "link_kk": "https://drive.google.com/u/0/open?usp=forms_web&id=1MntluoQj0LpPuvPTIwsCp_tTkd4-XOJi", "link_bpjs": "https://drive.google.com/u/0/open?usp=forms_web&id=1vbn8Y1ZMzoPQy0IzpppMZo0XHbg7RmlK", "link_foto": "https://drive.google.com/u/0/open?usp=forms_web&id=14GX1BHCZoD-SAeZTNZvg2xN61dDstWUQ", "link_npwp": "https://drive.google.com/u/0/open?usp=forms_web&id=1whsd_wugFRP4GLUCMaktMRIADLWnLBuc", "status": "Aktif"}, {"id": "RTRW-076", "cap_waktu": "2026/11/17 9:06:28 AM GMT+7", "nama": "EDI SURATNO", "nik": "3201020705720010", "nkk": "3201020502070123", "bpjs": "0001871072605", "tempat_lahir": "TRENGGALEK", "tanggal_lahir": "07.05.1972", "agama": "ISLAM", "pekerjaan": "BURUH HARIAN LEPAS", "status_kawin": "KAWIN TERCATAT", "no_hp": "081380013131", "email": "edysuratno4@gmail.com", "unit": "RT", "jabatan": "KETUA RT", "link_ktp": "https://drive.google.com/u/0/open?usp=forms_web&id=1VdzkFWCwS5fslJqmtT-gZNeKKbk8nGXL", "link_kk": "https://drive.google.com/u/0/open?usp=forms_web&id=1xq0VIp11VyIyB4tEuSpyiTxuwcHEiTr2", "link_bpjs": "https://drive.google.com/u/0/open?usp=forms_web&id=1OUljUMi0eu11Z8ho04M2VQMeiCTzgCdx", "link_foto": "https://drive.google.com/u/0/open?usp=forms_web&id=1uMzFMFQX67D2OTHqtGzbgzY04ltJe5Zj", "link_npwp": "https://drive.google.com/u/0/open?usp=forms_web&id=1FZL6huJaO0hHnD8WeFHbQDikEMNLUw35", "status": "Aktif"}, {"id": "RTRW-077", "cap_waktu": "2026/11/17 9:13:59 AM GMT+7", "nama": "SUGIYANTO", "nik": "3201020102720013", "nkk": "3201021505080052", "bpjs": "0003292587527", "tempat_lahir": "MAGELANG", "tanggal_lahir": "01/02/1972", "agama": "Islam", "pekerjaan": "Karyawan", "status_kawin": "KAWIN TERCATAT", "no_hp": "081219139384", "email": "Sugi77276@gmail.com", "unit": "RT", "jabatan": "KETUA RT", "link_ktp": "https://drive.google.com/u/0/open?usp=forms_web&id=18aeozufyITBAMu8elS8MBpZVEgr1nv41", "link_kk": "https://drive.google.com/u/0/open?usp=forms_web&id=1Y_jqtzimsy3ehjm9hN7rOCaHcOOnS8d6", "link_bpjs": "https://drive.google.com/u/0/open?usp=forms_web&id=1Ia01f_luUu1bwiolALopzX0pigL3Z8ep", "link_foto": "https://drive.google.com/u/0/open?usp=forms_web&id=1ZYTLb4YGJn0KkLq38IUuhJPVtCJVb1rY", "link_npwp": "", "status": "Aktif"}, {"id": "RTRW-078", "cap_waktu": "2026/11/17 9:34:24 AM GMT+7", "nama": "Syamsudin Baharsyah", "nik": "3175070104820019", "nkk": "3201021403170003", "bpjs": "0001873775114", "tempat_lahir": "Bogor", "tanggal_lahir": "01/04/1982", "agama": "Islam", "pekerjaan": "Dosen", "status_kawin": "KAWIN TERCATAT", "no_hp": "081297266260", "email": "syamsudinbaharsyah865@gmail.com", "unit": "RW", "jabatan": "SEKRETARIS RW", "link_ktp": "https://drive.google.com/u/0/open?usp=forms_web&id=1DJFTuo-Nxgvd4x4wCHWGdQcsLAoN9awj", "link_kk": "https://drive.google.com/u/0/open?usp=forms_web&id=1lIy6pr093bLuCccdlxTTXIhZABi4v6Co", "link_bpjs": "https://drive.google.com/u/0/open?usp=forms_web&id=1MQ33Ht964OmU56vYdYw2abj-sU9710fU", "link_foto": "https://drive.google.com/u/0/open?usp=forms_web&id=1YgCUEynwpgjnkREff7-vTTxUnxvffaEh", "link_npwp": "https://drive.google.com/u/0/open?usp=forms_web&id=1BauBx5K8VUm3Nx7qDNHSHPvVH2vJBBUv", "status": "Aktif"}, {"id": "RTRW-079", "cap_waktu": "2026/11/17 9:38:34 AM GMT+7", "nama": "Sukeni alfarizi", "nik": "3201021509770007", "nkk": "3201021809080034", "bpjs": "0001646595999", "tempat_lahir": "Pandeglang", "tanggal_lahir": "15/09/1977", "agama": "Islam", "pekerjaan": "Wirasuwasta", "status_kawin": "KAWIN TERCATAT", "no_hp": "089616286805", "email": "Kenirobet09@gmail.com", "unit": "RT", "jabatan": "KETUA RT", "link_ktp": "https://drive.google.com/u/0/open?usp=forms_web&id=133btJ_Dl4IPpMnrtjzkk40TUK3V_PYcp", "link_kk": "https://drive.google.com/u/0/open?usp=forms_web&id=1Yn1h2SU4gi4TfYchcoMN80gfaqwDuFYB", "link_bpjs": "https://drive.google.com/u/0/open?usp=forms_web&id=1i38kx6OWJnVHvsjL5kBUBlKatzejSk0m", "link_foto": "https://drive.google.com/u/0/open?usp=forms_web&id=1mi1Fz228b23xnXGDpuc8wFir01wSABAJ", "link_npwp": "https://drive.google.com/u/0/open?usp=forms_web&id=1QL_onQ1sZJVIjndMpaXsU00J_Cksgtvy", "status": "Aktif"}, {"id": "RTRW-080", "cap_waktu": "2026/11/17 9:43:48 AM GMT+7", "nama": "Daden Daden", "nik": "3201022803870007", "nkk": "3201021005090075", "bpjs": "0001306927337", "tempat_lahir": "BOGOR", "tanggal_lahir": "28/03/1987", "agama": "Islam", "pekerjaan": "Karyawan swasta", "status_kawin": "KAWIN TERCATAT", "no_hp": "081287789716", "email": "dadendaden105@gmail.com", "unit": "RT", "jabatan": "KETUA RT", "link_ktp": "https://drive.google.com/u/0/open?usp=forms_web&id=1cfJhojPonDTlliBRA-5TyuCxbMtgWrPM", "link_kk": "https://drive.google.com/u/0/open?usp=forms_web&id=1knl2RkvtSdLwy8riGTIV0f0kx-nfa6rT", "link_bpjs": "https://drive.google.com/u/0/open?usp=forms_web&id=1aJ7Wx6kAhoMahNdtG9xQKb8nDJHrgdEu", "link_foto": "https://drive.google.com/u/0/open?usp=forms_web&id=1HpdWlEujQQ6-Lz8fJbPizDTINAOUyvbx", "link_npwp": "https://drive.google.com/u/0/open?usp=forms_web&id=1yPNCL83ql2UNcvn3ayLZjIMaKTHsaUya", "status": "Aktif"}, {"id": "RTRW-081", "cap_waktu": "2026/11/17 9:49:25 AM GMT+7", "nama": "Sikeni alfarizi", "nik": "3201021509770007", "nkk": "3201021809080034", "bpjs": "0001646595999", "tempat_lahir": "Pandeglang", "tanggal_lahir": "15/09/1977", "agama": "Islam", "pekerjaan": "Wirasuwasta", "status_kawin": "KAWIN TERCATAT", "no_hp": "089616286805", "email": "Kenirobet09@gmail.com", "unit": "RT", "jabatan": "KETUA RT", "link_ktp": "https://drive.google.com/u/0/open?usp=forms_web&id=1oXIA8W2JgYTEq2Eu1sb476Zgtj7m4hhn", "link_kk": "https://drive.google.com/u/0/open?usp=forms_web&id=1HIygtiWyqTWl6xrIBCaFH8kqS9_xDceP", "link_bpjs": "https://drive.google.com/u/0/open?usp=forms_web&id=118oRVhXXRZEEIbAImbMPmUdGPdA8jGnO", "link_foto": "https://drive.google.com/u/0/open?usp=forms_web&id=17a7Be1YXr5e5lQhNFX4rQ32KzhZCMNXY", "link_npwp": "https://drive.google.com/u/0/open?usp=forms_web&id=1JEFt-57F1169k1Qhfzydt47H6-_tNgwM", "status": "Aktif"}, {"id": "RTRW-082", "cap_waktu": "2026/11/17 9:56:12 AM GMT+7", "nama": "AGUS YUDIANTO", "nik": "3501102311910001", "nkk": "3201021801210033", "bpjs": "0001641878256", "tempat_lahir": "PACITAN", "tanggal_lahir": "23/11/1991", "agama": "ISLAM", "pekerjaan": "BURUH", "status_kawin": "KAWIN TERCATAT", "no_hp": "085280541108", "email": "agus11yudianto23@gmail.com", "unit": "RT", "jabatan": "SEKRETARIS RT", "link_ktp": "https://drive.google.com/u/0/open?usp=forms_web&id=1YpJFkmNw3tAxfocg_byQPLZo4aKtxq-0", "link_kk": "https://drive.google.com/u/0/open?usp=forms_web&id=13ezv_jOphgJd6HRAJOQZCyM9N84Zz1Lv", "link_bpjs": "https://drive.google.com/u/0/open?usp=forms_web&id=1D_JVvNiAgv5niIgLemtp9nJXvY7xQwCf", "link_foto": "https://drive.google.com/u/0/open?usp=forms_web&id=14mrhlUyzmfw6TVvrtLbtAOqkoXWhAhaY", "link_npwp": "https://drive.google.com/u/0/open?usp=forms_web&id=1ONKz8CPPQu4H_de3q2vF4548vL3XXouA", "status": "Aktif"}, {"id": "RTRW-083", "cap_waktu": "2026/11/17 10:15:41 AM GMT+7", "nama": "SUGIYARTO", "nik": "3201020902620003", "nkk": "3201020406070041", "bpjs": "0000159575152", "tempat_lahir": "Klaten", "tanggal_lahir": "09_02-1962", "agama": "Islam", "pekerjaan": "Pensiun ASN", "status_kawin": "KAWIN TERCATAT", "no_hp": "087765473901", "email": "Asugiyarto1602@gmail.com", "unit": "RT", "jabatan": "KETUA RT", "link_ktp": "https://drive.google.com/u/0/open?usp=forms_web&id=155lxh9lnvx5OuDzMJPCrdHaf70XrZDt5", "link_kk": "https://drive.google.com/u/0/open?usp=forms_web&id=1FzPYg04y_JxkL3biB1t1qOI7UW1Odvg9", "link_bpjs": "https://drive.google.com/u/0/open?usp=forms_web&id=12srrkicUXOxhSU8TFO1VrpjuPDfReZRR", "link_foto": "https://drive.google.com/u/0/open?usp=forms_web&id=1ps_le682_iClsEMpHyaCuN6MkNQG0BSj", "link_npwp": "https://drive.google.com/u/0/open?usp=forms_web&id=1zP6AhWRv9d-QD0J1I2ihlXRD0tkiomlQ", "status": "Aktif"}, {"id": "RTRW-084", "cap_waktu": "2026/11/17 10:20:44 AM GMT+7", "nama": "Niko setiawan", "nik": "3201021209840007", "nkk": "3201020412080039", "bpjs": "0001645026263", "tempat_lahir": "Bogor", "tanggal_lahir": "12/09/1984", "agama": "Islam", "pekerjaan": "Buruh harian", "status_kawin": "KAWIN TERCATAT", "no_hp": "089602402684", "email": "niko90094@gmail.com", "unit": "RT", "jabatan": "KETUA RT", "link_ktp": "https://drive.google.com/u/0/open?usp=forms_web&id=1pgcHJTQIEA2OuQbbP6E1zVGf4def9Cnc", "link_kk": "https://drive.google.com/u/0/open?usp=forms_web&id=11gMgjWLl0jJ9L_iGkFuxPspJUUTPncHy", "link_bpjs": "https://drive.google.com/u/0/open?usp=forms_web&id=1BVCmOP8ZgT1KfQ1atRzCqbWgWHcAieHs", "link_foto": "https://drive.google.com/u/0/open?usp=forms_web&id=1qEJeeVB9-33PnjerpRhWWpDjkGsz8kr6", "link_npwp": "", "status": "Aktif"}, {"id": "RTRW-085", "cap_waktu": "2026/11/17 10:57:50 AM GMT+7", "nama": "Suroto", "nik": "3201021711650009", "nkk": "3201020903050058", "bpjs": "0001126244474", "tempat_lahir": "MAGETAN", "tanggal_lahir": "17/11/1965", "agama": "Islam", "pekerjaan": "Karyawan swasta", "status_kawin": "KAWIN TERCATAT", "no_hp": "0896-0375-9258", "email": "ssuroto628@gmail.com", "unit": "RT", "jabatan": "KETUA RT", "link_ktp": "https://drive.google.com/u/0/open?usp=forms_web&id=1ZqHjjs4SqDIrXiCC1rK73O-984iG7oCM", "link_kk": "https://drive.google.com/u/0/open?usp=forms_web&id=1i0oUD4ChHVCsGrkAajT4U7OUJYaPv9B9", "link_bpjs": "https://drive.google.com/u/0/open?usp=forms_web&id=1_hHjYxhw0Vu4D69ExEqah97fsX8oleoK", "link_foto": "https://drive.google.com/u/0/open?usp=forms_web&id=1CLGt6mHMLio4UDyo3Egb49U-OjsYW9Qs", "link_npwp": "https://drive.google.com/u/0/open?usp=forms_web&id=1ZB55LSFMVYtJcPgQuXZi3jviSaevDU5f", "status": "Aktif"}, {"id": "RTRW-086", "cap_waktu": "2026/11/17 11:47:28 AM GMT+7", "nama": "Endang Brotojoyo", "nik": "3201027008680005", "nkk": "3201023101070029", "bpjs": "0001620863695", "tempat_lahir": "Jakarta", "tanggal_lahir": "30081968", "agama": "Islam", "pekerjaan": "Ibu rumah tangga", "status_kawin": "KAWIN TERCATAT", "no_hp": "082112003743", "email": "Endangbrotojoyo3008@gmail.com", "unit": "RT", "jabatan": "BENDAHARA RT", "link_ktp": "https://drive.google.com/u/0/open?usp=forms_web&id=12KDIZ5faUQ1qjhO6OU7_pzK_VuLYcL0p", "link_kk": "https://drive.google.com/u/0/open?usp=forms_web&id=190R30dCpMfV7XB_ApI0n1gcDe64rVXv2", "link_bpjs": "https://drive.google.com/u/0/open?usp=forms_web&id=1eg1HkrDNtcU-G4jVEnK6ImMre0uMt3Ee", "link_foto": "https://drive.google.com/u/0/open?usp=forms_web&id=1q3BXGKOOAgCcTX9TUzCQFb20iQNH-_sR", "link_npwp": "", "status": "Aktif"}, {"id": "RTRW-087", "cap_waktu": "2026/11/17 11:49:06 AM GMT+7", "nama": "Handi wijaya", "nik": "3201021008790016", "nkk": "3201021507080054", "bpjs": "0001655267062", "tempat_lahir": "Bogor", "tanggal_lahir": "10/08/1979", "agama": "Islam", "pekerjaan": "Karyawan swasta", "status_kawin": "KAWIN TERCATAT", "no_hp": "087784161938", "email": "rukunwargaparungtanjung@gmail.com", "unit": "RW", "jabatan": "KETUA RW", "link_ktp": "https://drive.google.com/u/0/open?usp=forms_web&id=1hkKqn_xi7QguD8veUskjEDrKuROoLGsU", "link_kk": "https://drive.google.com/u/0/open?usp=forms_web&id=1pwnepKtg1NpVOuIGSHRM4HC0hPcP9WRu", "link_bpjs": "https://drive.google.com/u/0/open?usp=forms_web&id=1Bp9laqcU2GOYXl5JJkIY6rbcXvXRlqjp", "link_foto": "https://drive.google.com/u/0/open?usp=forms_web&id=1WXV9aNxCaWoYXK_84NXHLJOvZMYe2HjJ", "link_npwp": "https://drive.google.com/u/0/open?usp=forms_web&id=1hzoqNajKcHZqKBdL_NTWc9uI6cTVQgJ5", "status": "Aktif"}, {"id": "RTRW-088", "cap_waktu": "2026/11/17 11:50:39 AM GMT+7", "nama": "Ela yuliyanti", "nik": "3201026107930001", "nkk": "3201022910140029", "bpjs": "0001259667145", "tempat_lahir": "Bogor", "tanggal_lahir": "21/07/1993", "agama": "Islam", "pekerjaan": "Ibu rumah tangga", "status_kawin": "KAWIN TERCATAT", "no_hp": "085888780141", "email": "elayulianti51@gmail.com", "unit": "RT", "jabatan": "SEKRETARIS RT", "link_ktp": "https://drive.google.com/u/0/open?usp=forms_web&id=1q9E9QuPvMqV7x-4ztN8l_OnyccdfLVKN", "link_kk": "https://drive.google.com/u/0/open?usp=forms_web&id=1YVzG3FMQ9yAM97nr5LfYKNh-RLWppXfi", "link_bpjs": "https://drive.google.com/u/0/open?usp=forms_web&id=1E9auyUD6EVwgxhLCf-RE0IkX0UfJYSE2", "link_foto": "https://drive.google.com/u/0/open?usp=forms_web&id=1c-5mVd25siTevtxc-O2FnOCyN6NmBizY", "link_npwp": "https://drive.google.com/u/0/open?usp=forms_web&id=1abL7xohEDHqVgecH-kaRNIq1MpcfciG4", "status": "Aktif"}, {"id": "RTRW-089", "cap_waktu": "2026/11/17 12:13:41 PM GMT+7", "nama": "Atep rudini", "nik": "3201021605 870007", "nkk": "3201021801140002", "bpjs": "000131312979905", "tempat_lahir": "Sumedang", "tanggal_lahir": "16/05/1987", "agama": "Islam", "pekerjaan": "Karyawan swasta", "status_kawin": "KAWIN TERCATAT", "no_hp": "089614520495", "email": "ateprudini6@gmail com", "unit": "RT", "jabatan": "SEKRETARIS RT", "link_ktp": "https://drive.google.com/u/0/open?usp=forms_web&id=1WcK2y0ky0oeAzI2nshUeO-oRQsXDq1JD", "link_kk": "https://drive.google.com/u/0/open?usp=forms_web&id=1w40O5Sa608otoONbxsVailgpGEMGkwmG", "link_bpjs": "https://drive.google.com/u/0/open?usp=forms_web&id=1YmFnSODO_ERZBWo8HlRsMonYHZyueeHC", "link_foto": "https://drive.google.com/u/0/open?usp=forms_web&id=1RbeHYiGu5SbIu3Cyv7zb93ChzMDQuXlN", "link_npwp": "", "status": "Aktif"}, {"id": "RTRW-090", "cap_waktu": "2026/11/17 12:15:27 PM GMT+7", "nama": "BUDI NARTO", "nik": "3201020304810011", "nkk": "3201023001080047", "bpjs": "0001479995842", "tempat_lahir": "KLATEN", "tanggal_lahir": "03/04/1981", "agama": "ISLAM", "pekerjaan": "KARYAWAN SWASTA", "status_kawin": "KAWIN TERCATAT", "no_hp": "081319803590", "email": "budinarto880@gmail.com", "unit": "RT", "jabatan": "BENDAHARA RT", "link_ktp": "https://drive.google.com/u/0/open?usp=forms_web&id=1VmLUX53OJ-6RP9ON7s4yqIw5Mn97SIPt", "link_kk": "https://drive.google.com/u/0/open?usp=forms_web&id=1nAN79SMaqDFt0RlrrTQxbH2Dkqy5PgXJ", "link_bpjs": "https://drive.google.com/u/0/open?usp=forms_web&id=1aePPaBF52Ra1Ptk3-J5X7lruJ-MoJ8jH", "link_foto": "https://drive.google.com/u/0/open?usp=forms_web&id=1TD1fU1ofYVzJ_KAz36D8HUi38YZ1Ktfc", "link_npwp": "https://drive.google.com/u/0/open?usp=forms_web&id=1xc24lBgsa-qkdVSJL9kgRV-giw4J3J-T", "status": "Aktif"}, {"id": "RTRW-091", "cap_waktu": "2026/11/17 12:18:41 PM GMT+7", "nama": "Hasan", "nik": "320102027760003", "nkk": "3201021512030017", "bpjs": "0001155204077", "tempat_lahir": "Serang", "tanggal_lahir": "02/07/1976", "agama": "Islam", "pekerjaan": "Swasta", "status_kawin": "KAWIN TERCATAT", "no_hp": "085771449300", "email": "Hasangoak427 gmailcom", "unit": "RT", "jabatan": "KETUA RT", "link_ktp": "https://drive.google.com/u/0/open?usp=forms_web&id=14oQ6Bsl7sa6hULf2X-thzpdWGxQwTJkF", "link_kk": "https://drive.google.com/u/0/open?usp=forms_web&id=1FyjqGb_0j6L0m3wl2Rg_HbrweL6-TRb0", "link_bpjs": "https://drive.google.com/u/0/open?usp=forms_web&id=1bodaUcAe5JlQ3NQr08P4b6CxX78M6Sym", "link_foto": "https://drive.google.com/u/0/open?usp=forms_web&id=1g6BpZNSFPnY_chNIizXVuCeMhh9NrmVo", "link_npwp": "https://drive.google.com/u/0/open?usp=forms_web&id=1dEviDTsjf8ssyN8nj9lMpvd_3375Qclk", "status": "Aktif"}, {"id": "RTRW-092", "cap_waktu": "2026/11/17 12:20:01 PM GMT+7", "nama": "SAMSUDIN", "nik": "3201022405800017", "nkk": "3201022001140021", "bpjs": "0001646630482", "tempat_lahir": "Bogor", "tanggal_lahir": "24-05-1980", "agama": "Islam", "pekerjaan": "Karyawan", "status_kawin": "KAWIN TERCATAT", "no_hp": "0895336137231", "email": "Samsudi16@gmail.com", "unit": "RT", "jabatan": "KETUA RT", "link_ktp": "https://drive.google.com/u/0/open?usp=forms_web&id=14pJTCZj-IuNvWSmNVigwTKnyBc7uuHaU", "link_kk": "https://drive.google.com/u/0/open?usp=forms_web&id=1dPbSgV5GThbUnC4fZLfwqOdmaQSjOA5O", "link_bpjs": "https://drive.google.com/u/0/open?usp=forms_web&id=1wbHkqO3RAIc8j0sFeE3jSS38_k228Ygw", "link_foto": "https://drive.google.com/u/0/open?usp=forms_web&id=16xBSQnv2Ohwen0T_Y1zkJiInHe8eHTib", "link_npwp": "https://drive.google.com/u/0/open?usp=forms_web&id=1DlG5KgaRE6wsmw6mF1fu9TDCVYF7J4wW", "status": "Aktif"}, {"id": "RTRW-093", "cap_waktu": "2026/11/17 12:48:54 PM GMT+7", "nama": "WAGEYONO", "nik": "3201020211760006", "nkk": "3201020906100011", "bpjs": "0002055340056", "tempat_lahir": "PURWOREJO", "tanggal_lahir": "02/11/1976", "agama": "ISLAM", "pekerjaan": "OJOL", "status_kawin": "KAWIN TERCATAT", "no_hp": "081288656471", "email": "wageyono12345@gmail.com", "unit": "RW", "jabatan": "KETUA RW", "link_ktp": "https://drive.google.com/u/0/open?usp=forms_web&id=1Nln8xBGHgns5oshn6XfL2DKMRqXUC0a2", "link_kk": "https://drive.google.com/u/0/open?usp=forms_web&id=1eRpkiZJZEKn9q5xhmSjzifEbR_LFdCUq", "link_bpjs": "https://drive.google.com/u/0/open?usp=forms_web&id=1OSsssi7BiXLG2O4bxf-1HaClkc1kgC7f", "link_foto": "https://drive.google.com/u/0/open?usp=forms_web&id=1caIElzaObaJcA2ST1Z3XN7ShG1KCY0eT", "link_npwp": "", "status": "Aktif"}, {"id": "RTRW-094", "cap_waktu": "2026/11/17 12:50:32 PM GMT+7", "nama": "Rusman", "nik": "3201021010870011", "nkk": "3201023110140018", "bpjs": "0001453628801", "tempat_lahir": "Bogor", "tanggal_lahir": "10/10/1987", "agama": "islam", "pekerjaan": "karyawan swasta", "status_kawin": "KAWIN TERCATAT", "no_hp": "089639078664", "email": "kunarusman55@gmail.com", "unit": "RW", "jabatan": "SEKRETARIS RW", "link_ktp": "https://drive.google.com/u/0/open?usp=forms_web&id=1r2_Nvg9_RrMCgn5trnEheG1mg5vgHfh8", "link_kk": "https://drive.google.com/u/0/open?usp=forms_web&id=1WQKYYMKUVCcQPBisHE__NfeEnlOgSsaX", "link_bpjs": "https://drive.google.com/u/0/open?usp=forms_web&id=1Q8sgJ25AJPRpI8YCIobsvL94_N5R99Ph", "link_foto": "https://drive.google.com/u/0/open?usp=forms_web&id=1eIwL0zXBBQm4571hrK92LzDStZkyKnR9", "link_npwp": "https://drive.google.com/u/0/open?usp=forms_web&id=1iCtskNYXdQRvC_XrqQfBNX-7oU_dh2fd", "status": "Aktif"}, {"id": "RTRW-095", "cap_waktu": "2026/11/17 12:56:31 PM GMT+7", "nama": "Nunu bachtiar", "nik": "3201021208690011", "nkk": "3201020202070204", "bpjs": "0001125697522", "tempat_lahir": "Bogor", "tanggal_lahir": "12/08/69", "agama": "Islam", "pekerjaan": "Buruh harian lepas", "status_kawin": "KAWIN TIDAK TERCATAT", "no_hp": "0813818222735", "email": "pabuarancicadas30@gmail.com", "unit": "RT", "jabatan": "KETUA RT", "link_ktp": "https://drive.google.com/u/0/open?usp=forms_web&id=1yvpkkHn6NLf1QoehfrDMOVp-BNWmvDIc", "link_kk": "https://drive.google.com/u/0/open?usp=forms_web&id=1o5Xi-KdbQ27Tm2VPUVq2SbFxXVfTH7cb", "link_bpjs": "https://drive.google.com/u/0/open?usp=forms_web&id=1FSO94Fu8VWwhRm46tSn67rdqhzEGXaLn", "link_foto": "https://drive.google.com/u/0/open?usp=forms_web&id=1nKuVxZPN0fmkjJoQKj_1wUgnfMwsM2j5", "link_npwp": "https://drive.google.com/u/0/open?usp=forms_web&id=1AePDLicUC7l8zgh0d06rX3GkyqgRklXN", "status": "Aktif"}, {"id": "RTRW-096", "cap_waktu": "2026/11/17 1:00:12 PM GMT+7", "nama": "WAGEYONO", "nik": "3201020211760006", "nkk": "3201020906100011", "bpjs": "0002055340056", "tempat_lahir": "PURWOREJO", "tanggal_lahir": "02/11/1976", "agama": "ISLAM", "pekerjaan": "OJOL", "status_kawin": "KAWIN TERCATAT", "no_hp": "081288656471", "email": "wageyono12345@gmail.com", "unit": "RW", "jabatan": "KETUA RW", "link_ktp": "https://drive.google.com/u/0/open?usp=forms_web&id=1w0cOSrK3zkGfg36yB-5aDIAhrRdvfrFI", "link_kk": "https://drive.google.com/u/0/open?usp=forms_web&id=1i54mq-SLpPfPjMDEdZBxLFDHhUgYOwEP", "link_bpjs": "https://drive.google.com/u/0/open?usp=forms_web&id=138-wcGJZJZ0dAN8ZRglsCY0NiLakD19P", "link_foto": "https://drive.google.com/u/0/open?usp=forms_web&id=15ltKatO8MWN2dsDOFHC4SAyoay-wiMw2", "link_npwp": "", "status": "Aktif"}, {"id": "RTRW-097", "cap_waktu": "2026/11/17 1:26:33 PM GMT+7", "nama": "HAKIM WIJAYA", "nik": "3201021902821001", "nkk": "3201021104131003", "bpjs": "0003303276456", "tempat_lahir": "BOGOR", "tanggal_lahir": "19/02/1982", "agama": "ISLAM", "pekerjaan": "BURUH HARIAN LEPAS", "status_kawin": "KAWIN TERCATAT", "no_hp": "0895337020708", "email": "Pabuaranakew@gmail.com", "unit": "RT", "jabatan": "SEKRETARIS RT", "link_ktp": "https://drive.google.com/u/0/open?usp=forms_web&id=1MgrnJDRT7le-0mxcQS4yrZNplvL5Q6wR", "link_kk": "https://drive.google.com/u/0/open?usp=forms_web&id=18_RJVxmj6-1tCxDoQBD1NFzIVL-dpiH9", "link_bpjs": "https://drive.google.com/u/0/open?usp=forms_web&id=14j6orYBJI1ChgzjgpNIQOcNkQaA9Oesc", "link_foto": "https://drive.google.com/u/0/open?usp=forms_web&id=1Ym3EO5z4dY-hQHWL7wBdwWE7RIiCygVS", "link_npwp": "https://drive.google.com/u/0/open?usp=forms_web&id=1PiDTwgbIWASP-BqtT-NGimIi1HOgRy-h", "status": "Aktif"}, {"id": "RTRW-098", "cap_waktu": "2026/11/17 1:46:25 PM GMT+7", "nama": "Rahmat hidayat", "nik": "3201021110820015", "nkk": "3201022410070027", "bpjs": "0001616795853", "tempat_lahir": "BOGOR", "tanggal_lahir": "11/10/1982", "agama": "ISLAM", "pekerjaan": "Karyawan swasta", "status_kawin": "KAWIN TERCATAT", "no_hp": "081381821249", "email": "darjimsaja17@gmail.com", "unit": "RT", "jabatan": "SEKSI KESEJAHTERAAN SOSIAL RT", "link_ktp": "https://drive.google.com/u/0/open?usp=forms_web&id=1S1Mf6svdZlvMMhpmNNnkU8Kn1O2OUwmZ", "link_kk": "https://drive.google.com/u/0/open?usp=forms_web&id=1_QMj32MB7Cmwv5zEKeVx_vRZ4iNsudyC", "link_bpjs": "https://drive.google.com/u/0/open?usp=forms_web&id=1dRLSoDXrsYznwYlw-RmFnlc0Dr6GhfwP", "link_foto": "https://drive.google.com/u/0/open?usp=forms_web&id=1AW4454bO7dwO1ymZA_MPiUEj3sZiWHOg", "link_npwp": "https://drive.google.com/u/0/open?usp=forms_web&id=10rdh0fyo33fJG_uqobqL_exav8YcWyYO", "status": "Aktif"}, {"id": "RTRW-099", "cap_waktu": "2026/11/17 1:56:24 PM GMT+7", "nama": "SUGIYARTO", "nik": "3201020902620003", "nkk": "3201020406070041", "bpjs": "0000159575152", "tempat_lahir": "Klaten", "tanggal_lahir": "09/02/1962", "agama": "Islam", "pekerjaan": "Pensiun ASN", "status_kawin": "KAWIN TERCATAT", "no_hp": "087765473901", "email": "sugiyarto1602@gmail.com", "unit": "RT", "jabatan": "KETUA RT", "link_ktp": "https://drive.google.com/u/0/open?usp=forms_web&id=1GwRTmR9f2Q1bH8BG-eWFiale10RPegN1", "link_kk": "https://drive.google.com/u/0/open?usp=forms_web&id=1oV1XILSibpiJPnP8EyF-G-kJYgKrdBzo", "link_bpjs": "https://drive.google.com/u/0/open?usp=forms_web&id=1gGTfiZBC7npkVN7LGn5fEAro7hGzl_rf", "link_foto": "https://drive.google.com/u/0/open?usp=forms_web&id=1xccYZL7CIsVunvWZC4bX1-96D2R5sqAi", "link_npwp": "https://drive.google.com/u/0/open?usp=forms_web&id=1pEe6M1istX0bp5gxbraoBagslSqQXSvV", "status": "Aktif"}, {"id": "RTRW-100", "cap_waktu": "2026/11/17 2:33:51 PM GMT+7", "nama": "Muhamad Irwan", "nik": "3201021410880008", "nkk": "3201021902140024", "bpjs": "17021827906", "tempat_lahir": "Bogor", "tanggal_lahir": "14/01/1987", "agama": "Islam", "pekerjaan": "karyawan kontrak", "status_kawin": "KAWIN TERCATAT", "no_hp": "085716889046", "email": "muhamadirwan1533@gmail.com", "unit": "RW", "jabatan": "SEKSI KETENTRAMAN, KEAMANAN DAN KETERTIBAN UMUM RW", "link_ktp": "https://drive.google.com/u/0/open?usp=forms_web&id=11cjOBxOju3_UKNumDVihtBMWXKkiNYY9", "link_kk": "https://drive.google.com/u/0/open?usp=forms_web&id=1lyfaw6sOftkUVDOu7iOif6lhaF1nlTf7", "link_bpjs": "https://drive.google.com/u/0/open?usp=forms_web&id=1f-fbRFJdOgIQTnxVf8hP0Ocub44lUOh_", "link_foto": "https://drive.google.com/u/0/open?usp=forms_web&id=1SuLnn0h5Ca45cZYmd53PcihhoxJslcKE", "link_npwp": "https://drive.google.com/u/0/open?usp=forms_web&id=1CnwNJyqtfz170-gmxcniciJY_zBkRk4q", "status": "Aktif"}, {"id": "RTRW-101", "cap_waktu": "2026/11/17 3:17:34 PM GMT+7", "nama": "KOMARUDIN", "nik": "3201020402790005", "nkk": "3201021704060056", "bpjs": "0001465826747", "tempat_lahir": "BOGOR", "tanggal_lahir": "04/02/1979", "agama": "islam", "pekerjaan": "BURUH HARIAN LEPAS", "status_kawin": "KAWIN TERCATAT", "no_hp": "08815482577", "email": "komarudinjawa678@gmail.com", "unit": "RT", "jabatan": "KETUA RT", "link_ktp": "https://drive.google.com/u/0/open?usp=forms_web&id=1hi2i6JtgfcALFZbn1B3--zaAgMcXHpa1", "link_kk": "https://drive.google.com/u/0/open?usp=forms_web&id=1Z4OUrucRx8N0HflF4WSPLb2jWaCCXHyD", "link_bpjs": "https://drive.google.com/u/0/open?usp=forms_web&id=1AWAuuTQ-rCI8NNqeYkAUCwEWeiV7GWtP", "link_foto": "https://drive.google.com/u/0/open?usp=forms_web&id=1fkHCn_UBJv8TIcPAWr5F0ntHlIS9Zcez", "link_npwp": "https://drive.google.com/u/0/open?usp=forms_web&id=1u7RWMJ8_L0Msb4D8v0zE1Dv6srHUpRc9", "status": "Aktif"}, {"id": "RTRW-102", "cap_waktu": "2026/11/17 4:00:43 PM GMT+7", "nama": "Eko mahendratno", "nik": "3312050804920001", "nkk": "3201022111170006", "bpjs": "0002766352779", "tempat_lahir": "Wonogiri", "tanggal_lahir": "08/04/1992", "agama": "Kristen", "pekerjaan": "Security", "status_kawin": "KAWIN TERCATAT", "no_hp": "085282864532", "email": "ekomahendratno7@gmail.com", "unit": "RT", "jabatan": "SEKRETARIS RT", "link_ktp": "https://drive.google.com/u/0/open?usp=forms_web&id=1LOyHPIHE3X2yecyNX3-SQZHddlygPtMm", "link_kk": "https://drive.google.com/u/0/open?usp=forms_web&id=1TJIIcIoaK4REaHiA3ghe-q5bcMb2NniH", "link_bpjs": "https://drive.google.com/u/0/open?usp=forms_web&id=1SJZBy66P68nDHwv_zRyYz8qUCDUbqaLF", "link_foto": "https://drive.google.com/u/0/open?usp=forms_web&id=18-TSxAexE34MgplZy7K5KfuqbjDU1icS", "link_npwp": "https://drive.google.com/u/0/open?usp=forms_web&id=1oVbLZ_OHUC9kkKKgCzc_vXFS3oemH2-W", "status": "Aktif"}, {"id": "RTRW-103", "cap_waktu": "2026/11/17 4:34:52 PM GMT+7", "nama": "Enjen", "nik": "3201020409740005", "nkk": "3201020303090052", "bpjs": "12008705753", "tempat_lahir": "Bogor", "tanggal_lahir": "04/09/1974", "agama": "Islam", "pekerjaan": "Pedagang", "status_kawin": "KAWIN TERCATAT", "no_hp": "089602402660", "email": "yantulyanti0@gmail.com", "unit": "RW", "jabatan": "KETUA RW", "link_ktp": "https://drive.google.com/u/0/open?usp=forms_web&id=14dOVZnj-Uq_YBI5qJVc5rGs3C7e70ecj", "link_kk": "https://drive.google.com/u/0/open?usp=forms_web&id=1ESeOoDpsK_vXu1pumlwqB7VADI7Zu9dD", "link_bpjs": "https://drive.google.com/u/0/open?usp=forms_web&id=1sOBXQhkArUGMnat1KwMhFs7fqu27xyi-", "link_foto": "https://drive.google.com/u/0/open?usp=forms_web&id=1zVaH9Fm3xqBsbqjRmQR8afh4lMzBJB2v", "link_npwp": "https://drive.google.com/u/0/open?usp=forms_web&id=1BVVVgnIQRuwqwl_jsq2iM3R37rRx6Sid", "status": "Aktif"}, {"id": "RTRW-104", "cap_waktu": "2026/11/17 4:40:22 PM GMT+7", "nama": "Endang.sukmana", "nik": "3201020904780015", "nkk": "3201021309120027", "bpjs": "0001126684989", "tempat_lahir": "Indramayu", "tanggal_lahir": "09041978", "agama": "Islam", "pekerjaan": "Karyawan swasta", "status_kawin": "KAWIN TERCATAT", "no_hp": "081224765124", "email": "Koblaaja@mail com", "unit": "RT", "jabatan": "KETUA RT", "link_ktp": "https://drive.google.com/u/0/open?usp=forms_web&id=11why7pIHe6Fm3coVXgD9OK49_nH_n4ly", "link_kk": "https://drive.google.com/u/0/open?usp=forms_web&id=1xImQ-WYX-ney0b_G197_TaVYWn38h9jl", "link_bpjs": "https://drive.google.com/u/0/open?usp=forms_web&id=1q9j1I1XDZ8pqJG09fZ4Cm5pT-dJ_9PId", "link_foto": "https://drive.google.com/u/0/open?usp=forms_web&id=1Dq0rj_kzBS8LRSDtJq5Rwav4b5_hFX0G", "link_npwp": "https://drive.google.com/u/0/open?usp=forms_web&id=16C3T9_3VUzvz_P0dWCr6FAIGUmbPNj6d", "status": "Aktif"}, {"id": "RTRW-105", "cap_waktu": "2026/11/17 4:54:12 PM GMT+7", "nama": "Junaedi johansah", "nik": "3201021709740012", "nkk": "3201021107100004", "bpjs": "0001638337162", "tempat_lahir": "Bogor", "tanggal_lahir": "17-09-1974", "agama": "Islam", "pekerjaan": "Pegawai swasta", "status_kawin": "KAWIN TERCATAT", "no_hp": "088976704339", "email": "junaedijuhansah74@gmail.com", "unit": "RT", "jabatan": "KETUA RT", "link_ktp": "https://drive.google.com/u/0/open?usp=forms_web&id=1Iikj6Ly0arQ64Z4pFx-3gJLjLRYYk-8c", "link_kk": "https://drive.google.com/u/0/open?usp=forms_web&id=1hUlCODGM5x8qpNjspKBHi7M7AeFGcRVj", "link_bpjs": "https://drive.google.com/u/0/open?usp=forms_web&id=14r2UJ474_2rUyHJWZjt9JXDTUfuNPeFX", "link_foto": "https://drive.google.com/u/0/open?usp=forms_web&id=1ngF67Y-2DeYkdZgDVYC89ixCriWs0Bo9", "link_npwp": "https://drive.google.com/u/0/open?usp=forms_web&id=1Nm6nXnJxz81jFYaxt3Lwi_mXpJQOKI9w", "status": "Aktif"}, {"id": "RTRW-106", "cap_waktu": "2026/11/17 4:59:26 PM GMT+7", "nama": "Novizar", "nik": "3201021611740007", "nkk": "3201022408090042", "bpjs": "0001717949574", "tempat_lahir": "TALANG", "tanggal_lahir": "16/11/1974", "agama": "Islam", "pekerjaan": "Karyawan Swasta", "status_kawin": "KAWIN TERCATAT", "no_hp": "0812-8917-3505", "email": "novizar1611@gmaul.com", "unit": "RT", "jabatan": "BENDAHARA RT", "link_ktp": "https://drive.google.com/u/0/open?usp=forms_web&id=1-w-V9qrxCviSi4EiXiMC2hpo_mxQLxBY", "link_kk": "https://drive.google.com/u/0/open?usp=forms_web&id=1MWj8801nFW9HgkDnQQBz_eUMRycHMSm3", "link_bpjs": "https://drive.google.com/u/0/open?usp=forms_web&id=1FMf2b8t0eFbfX60WW6ex5j8rE0fY7EBl", "link_foto": "https://drive.google.com/u/0/open?usp=forms_web&id=1uiO_MgC2tNHF7pfuaUERrN6HfnZFTfMm", "link_npwp": "", "status": "Aktif"}, {"id": "RTRW-107", "cap_waktu": "2026/11/17 5:16:35 PM GMT+7", "nama": "Zulkifli", "nik": "3201020905710003", "nkk": "3201022703060041", "bpjs": "93J50006969", "tempat_lahir": "Bandar-lanpung", "tanggal_lahir": "09/05/1971", "agama": "Islam", "pekerjaan": "Karyawan swasta", "status_kawin": "KAWIN TERCATAT", "no_hp": "085624660708", "email": "asvhjhvsjssbn@gmail.com", "unit": "RT", "jabatan": "BENDAHARA RT", "link_ktp": "https://drive.google.com/u/0/open?usp=forms_web&id=1hFmWkI3zntfJb2MJOW-Aa9O30c8dvOAA", "link_kk": "https://drive.google.com/u/0/open?usp=forms_web&id=1ua2kqOkp8SasV9MJzEvUiRXzvQGwbPdf", "link_bpjs": "https://drive.google.com/u/0/open?usp=forms_web&id=1W8I6tHvQO0BFS5hDpePxPx4IWWGOF26E", "link_foto": "https://drive.google.com/u/0/open?usp=forms_web&id=1q7gtHGurYa1gbTbjnBAMS6CNM9QKYGnv", "link_npwp": "https://drive.google.com/u/0/open?usp=forms_web&id=1CKp9OUHyYBh093H7t4ey_oLoPRX1_9q6", "status": "Aktif"}, {"id": "RTRW-108", "cap_waktu": "2026/11/17 5:37:42 PM GMT+7", "nama": "SOLEH", "nik": "3201021007750026", "nkk": "3201022803110015", "bpjs": "0001129161374", "tempat_lahir": "BOGOR", "tanggal_lahir": "10/07/1975", "agama": "ISLAM", "pekerjaan": "BURUH", "status_kawin": "KAWIN TERCATAT", "no_hp": "081807567226", "email": "solehiman8615@gmail.com", "unit": "RT", "jabatan": "SEKRETARIS RT", "link_ktp": "https://drive.google.com/u/0/open?usp=forms_web&id=1d2R1gX0gUXPs_GVCaCH9jLJALghFWcf5", "link_kk": "https://drive.google.com/u/0/open?usp=forms_web&id=1Ngo_VdS7rUuS-CgnTv331EYgiO5JjqLX", "link_bpjs": "https://drive.google.com/u/0/open?usp=forms_web&id=16tek6eGwf0ErjnxGraXy5vAKRsnOAsFT", "link_foto": "https://drive.google.com/u/0/open?usp=forms_web&id=1TLyEIoNRFVb4rRxIbCE3rJTmxOHOuxh5", "link_npwp": "https://drive.google.com/u/0/open?usp=forms_web&id=1YVe2ddr-FPN4emu4ma2vT5dl0Ws6g4Ne", "status": "Aktif"}, {"id": "RTRW-109", "cap_waktu": "2026/11/17 5:41:14 PM GMT+7", "nama": "Abdul rohim", "nik": "3201022501750007", "nkk": "3201022410070025", "bpjs": "0002094807385", "tempat_lahir": "Bogor", "tanggal_lahir": "25/01/1975", "agama": "Islam", "pekerjaan": "Buruh", "status_kawin": "KAWIN TERCATAT", "no_hp": "081311527974", "email": "AbdulRohim25@gmail.com", "unit": "RT", "jabatan": "KETUA RT", "link_ktp": "https://drive.google.com/u/0/open?usp=forms_web&id=1ITzwp-BjRakORX029QwUS6mMB-OJQO9j", "link_kk": "https://drive.google.com/u/0/open?usp=forms_web&id=1pO51BkUDlaybkco5apw-H6x1kE3gYxpd", "link_bpjs": "https://drive.google.com/u/0/open?usp=forms_web&id=1nQB-bfQHo13aD0pRXInzsxwyY6oXt7G7", "link_foto": "https://drive.google.com/u/0/open?usp=forms_web&id=19Cq9ZL56hlgYRA6gCGVY8vJ1n3OhRtmw", "link_npwp": "https://drive.google.com/u/0/open?usp=forms_web&id=1agRoDsZP-L478uS6OVsOPOXIO4537pBH", "status": "Aktif"}, {"id": "RTRW-110", "cap_waktu": "2026/11/17 5:44:24 PM GMT+7", "nama": "SOLEH", "nik": "3201021007750026", "nkk": "3201022803110015", "bpjs": "0001129161374", "tempat_lahir": "BOGOR", "tanggal_lahir": "10/07/1975", "agama": "ISLAM", "pekerjaan": "BURUH", "status_kawin": "KAWIN TERCATAT", "no_hp": "081807567226", "email": "solehiman8615@gmail.com", "unit": "RT", "jabatan": "SEKRETARIS RT", "link_ktp": "https://drive.google.com/u/0/open?usp=forms_web&id=1jE5z_vZZ6li0XeMDdBPewXLEh4wC8R24", "link_kk": "https://drive.google.com/u/0/open?usp=forms_web&id=1qJ3j4eSUn_fsmavjv4RDRi7KvppZdr03", "link_bpjs": "https://drive.google.com/u/0/open?usp=forms_web&id=1kzomB0JTkb5YVjToFu7eTl0aKTe5fTej", "link_foto": "https://drive.google.com/u/0/open?usp=forms_web&id=1_Y5Xe1BbUd_xMAXe3tQS9EpbinFb2ac8", "link_npwp": "https://drive.google.com/u/0/open?usp=forms_web&id=1fK4fTWnfTLjk1F4UJ7gHvbea0mViyn_r", "status": "Aktif"}, {"id": "RTRW-111", "cap_waktu": "2026/11/17 6:17:33 PM GMT+7", "nama": "Syahrul Fauzi", "nik": "3201021011800007", "nkk": "3201021107070124", "bpjs": "22094821596", "tempat_lahir": "Jakarta", "tanggal_lahir": "10/11/1980", "agama": "Islam", "pekerjaan": "Buruh harian lepas", "status_kawin": "KAWIN TERCATAT", "no_hp": "087772469833", "email": "syahrulfauzi47@gmail.com", "unit": "RW", "jabatan": "BENDAHARA RW", "link_ktp": "https://drive.google.com/u/0/open?usp=forms_web&id=1wQyhfPW-JKs-kNikxOyXjSCzSjxYg0Ph", "link_kk": "https://drive.google.com/u/0/open?usp=forms_web&id=1Icyu29dWXgwtAv4wfxJvE_hqVdL4sKZd", "link_bpjs": "https://drive.google.com/u/0/open?usp=forms_web&id=1j9Zco2ni3IVwRUNDlCandgW-SWF2pkzP", "link_foto": "https://drive.google.com/u/0/open?usp=forms_web&id=1Pc5GRuoQUwcUZ3S-X1f_RYHmEdNsbsPf", "link_npwp": "https://drive.google.com/u/0/open?usp=forms_web&id=15GEOc5sJFO267SJP2XlBPdxxSjDEO7rC", "status": "Aktif"}, {"id": "RTRW-112", "cap_waktu": "2026/11/17 6:24:46 PM GMT+7", "nama": "Dede supriatna", "nik": "3201021303010007", "nkk": "3201022704260006", "bpjs": "25147490012", "tempat_lahir": "BOGOR", "tanggal_lahir": "13/03/2001", "agama": "Islam", "pekerjaan": "Karyawan swasta", "status_kawin": "KAWIN TERCATAT", "no_hp": "088212118605", "email": "dedesprtna13@gmail.com", "unit": "RT", "jabatan": "SEKSI PEMUDA, OLAHRAGA DAN KESENIAN RT", "link_ktp": "https://drive.google.com/u/0/open?usp=forms_web&id=1u1SfonKGuS6Q11SL7ueGGVqoNfPGtgKn", "link_kk": "https://drive.google.com/u/0/open?usp=forms_web&id=1DUSsOl2Cbl5Eqt30roo82PY8V44zmj_C", "link_bpjs": "https://drive.google.com/u/0/open?usp=forms_web&id=1SX7CWj8k0Jnv942ZhfqGbV4KCS43NQL4", "link_foto": "https://drive.google.com/u/0/open?usp=forms_web&id=1dPd-59oFNB6WkpKfWJBwvLJ14AG69gF8", "link_npwp": "https://drive.google.com/u/0/open?usp=forms_web&id=1oQx6iWw6OgoXXk0KpdAXNsVr6nQ8184L", "status": "Aktif"}, {"id": "RTRW-113", "cap_waktu": "2026/11/17 6:55:51 PM GMT+7", "nama": "Endang purnama", "nik": "3201020407720012", "nkk": "3201022309080029", "bpjs": "0001607150575", "tempat_lahir": "BOGOR", "tanggal_lahir": "04/07/1972", "agama": "Islam", "pekerjaan": "Swasta", "status_kawin": "KAWIN TERCATAT", "no_hp": "081281975076", "email": "endangpurnama284@mail.com", "unit": "RW", "jabatan": "KETUA RW", "link_ktp": "https://drive.google.com/u/0/open?usp=forms_web&id=1V1Q1mrZYbVspPZaAa7dmcUoWAM1hiN4C", "link_kk": "https://drive.google.com/u/0/open?usp=forms_web&id=1iTP8Vj8nrXIp2W3z9qei0f3sjMhwUvHq", "link_bpjs": "https://drive.google.com/u/0/open?usp=forms_web&id=1w603OuneaCRz0QsjVZDBmOsh1QvBByMo", "link_foto": "https://drive.google.com/u/0/open?usp=forms_web&id=1iCZR3VNTvWxco3MuXVQgtFXIco3_tRzO", "link_npwp": "https://drive.google.com/u/0/open?usp=forms_web&id=1Etw6KwfYCrVN1TR7eRVH7ghqDDNwqOWG", "status": "Aktif"}, {"id": "RTRW-114", "cap_waktu": "2026/11/17 7:18:44 PM GMT+7", "nama": "3201020705740006", "nik": "IBRAHIM BIN NAHILAN", "nkk": "3201020901070049", "bpjs": "0001733464034", "tempat_lahir": "BOGOR", "tanggal_lahir": "07/05/1974", "agama": "ISLAM", "pekerjaan": "BURUH HARIAN LEPAS", "status_kawin": "KAWIN TERCATAT", "no_hp": "082210228967", "email": "Ibrahimbinnahilan@gmail.com", "unit": "RT", "jabatan": "KETUA RT", "link_ktp": "https://drive.google.com/u/0/open?usp=forms_web&id=16yIbtzlJ2ICdOCpGJtELRJLe7KEk_thD", "link_kk": "https://drive.google.com/u/0/open?usp=forms_web&id=1iiLZtdLVFaEC_j2c_8FqYF3F1-8fENLO", "link_bpjs": "https://drive.google.com/u/0/open?usp=forms_web&id=1V7Zi2Q5Ce-LmQEkWQ-SWEg8GrUIMlWWJ", "link_foto": "https://drive.google.com/u/0/open?usp=forms_web&id=1WCksOPtuYZeRQ3ee2xImjPN95ySwcsO-", "link_npwp": "", "status": "Aktif"}, {"id": "RTRW-115", "cap_waktu": "2026/11/17 8:06:10 PM GMT+7", "nama": "sarifudin", "nik": "3201021807780005", "nkk": "3201022007050043", "bpjs": "0001804848063", "tempat_lahir": "BOGOR", "tanggal_lahir": "18/07/1978", "agama": "islam", "pekerjaan": "buruh", "status_kawin": "KAWIN TERCATAT", "no_hp": "085214088073", "email": "ciplukvillas16@gmail.com", "unit": "RT", "jabatan": "BENDAHARA RT", "link_ktp": "https://drive.google.com/u/0/open?usp=forms_web&id=1fxqdMR-IQ29xQ5mru-0ET-IxIpZFoRUq", "link_kk": "https://drive.google.com/u/0/open?usp=forms_web&id=1DoSLuXDxQfDOwMcsbzLg5pErJfiugs0u", "link_bpjs": "https://drive.google.com/u/0/open?usp=forms_web&id=1CZzSzvuguW4ix96YyFDXnVZ9FdioaM5X", "link_foto": "https://drive.google.com/u/0/open?usp=forms_web&id=1kQm82gKqgeezBWUfWq2Krd4dzTYNokW_", "link_npwp": "https://drive.google.com/u/0/open?usp=forms_web&id=1aznM1IRw6CmHlXPTIAq3aUt_5AjKA7yG", "status": "Aktif"}, {"id": "RTRW-116", "cap_waktu": "2026/11/17 8:11:01 PM GMT+7", "nama": "DWI SAPTO WARDOYO", "nik": "3315141709900001", "nkk": "3315140606150001", "bpjs": "0001144711001", "tempat_lahir": "GROBOGAN", "tanggal_lahir": "17/09/1990", "agama": "ISLAM", "pekerjaan": "SRABUTAN", "status_kawin": "KAWIN TERCATAT", "no_hp": "081297420465", "email": "dwye.kevin@gmail.com", "unit": "RT", "jabatan": "SEKRETARIS RT", "link_ktp": "https://drive.google.com/u/0/open?usp=forms_web&id=1tjp_pevh_edrNSbcGmfCd3_1sYVbXhwk", "link_kk": "https://drive.google.com/u/0/open?usp=forms_web&id=1oxms2mKwpx2L819U12Hd-CdYuZW_MZSS", "link_bpjs": "https://drive.google.com/u/0/open?usp=forms_web&id=1kSCuZaMERLd7NcSchKNgFoFMGdzipDMY", "link_foto": "https://drive.google.com/u/0/open?usp=forms_web&id=147rXWmpEJwgwwgb6NwsGJSJKbnEykLPg", "link_npwp": "", "status": "Aktif"}];
+
+    const STORAGE_KEYS = {
+      profile: 'sida_desa_profile_v1',
+      rtrw: 'sida_desa_rtrw_v1',
+      aparatur: 'sida_desa_aparatur_v1',
+      bpd: 'sida_desa_bpd_v1',
+      kelembagaan: 'sida_desa_kelembagaan_v1'
+    };
+
+    let state = {
+      activeTab: 'dashboard',
+      profile: { desa: 'Contoh', kec: 'Gunung Putri', kab: 'Bogor', prov: 'Jawa Barat' },
+      rtrw: [],
+      aparatur: [],
+      bpd: [],
+      kelembagaan: []
+    };
+
+    let chartJabatanInstance = null;
+    let chartUnitInstance = null;
+
+    function loadState() {
+      try {
+        const p = localStorage.getItem(STORAGE_KEYS.profile);
+        if (p) state.profile = JSON.parse(p);
+
+        const r = localStorage.getItem(STORAGE_KEYS.rtrw);
+        state.rtrw = r ? JSON.parse(r) : INITIAL_RTRW_DATA;
+
+        const a = localStorage.getItem(STORAGE_KEYS.aparatur);
+        state.aparatur = a ? JSON.parse(a) : [];
+
+        const b = localStorage.getItem(STORAGE_KEYS.bpd);
+        state.bpd = b ? JSON.parse(b) : [];
+
+        const k = localStorage.getItem(STORAGE_KEYS.kelembagaan);
+        state.kelembagaan = k ? JSON.parse(k) : [];
+      } catch (err) {
+        state.rtrw = INITIAL_RTRW_DATA;
+      }
+    }
+
+    function persistAll() {
+      localStorage.setItem(STORAGE_KEYS.profile, JSON.stringify(state.profile));
+      localStorage.setItem(STORAGE_KEYS.rtrw, JSON.stringify(state.rtrw));
+      localStorage.setItem(STORAGE_KEYS.aparatur, JSON.stringify(state.aparatur));
+      localStorage.setItem(STORAGE_KEYS.bpd, JSON.stringify(state.bpd));
+      localStorage.setItem(STORAGE_KEYS.kelembagaan, JSON.stringify(state.kelembagaan));
+    }
+
+    function applyProfileUI() {
+      document.getElementById('hdr-desa').textContent = 'Desa ' + state.profile.desa;
+      document.getElementById('hdr-kec').textContent = state.profile.kec;
+      document.getElementById('hdr-kab').textContent = state.profile.kab;
+      document.getElementById('hdr-prov').textContent = state.profile.prov;
+
+      document.getElementById('kop-desa').textContent = state.profile.desa.toUpperCase();
+      document.getElementById('kop-kec').textContent = state.profile.kec.toUpperCase();
+      document.getElementById('kop-kab').textContent = state.profile.kab.toUpperCase();
+      document.getElementById('kop-prov').textContent = state.profile.prov;
+    }
+
+    function openProfileModal() {
+      document.getElementById('inp-desa').value = state.profile.desa;
+      document.getElementById('inp-kec').value = state.profile.kec;
+      document.getElementById('inp-kab').value = state.profile.kab;
+      document.getElementById('inp-prov').value = state.profile.prov;
+      document.getElementById('profile-modal').classList.remove('hidden');
+    }
+
+    function closeProfileModal() {
+      document.getElementById('profile-modal').classList.add('hidden');
+    }
+
+    function saveProfile() {
+      state.profile = {
+        desa: document.getElementById('inp-desa').value.trim() || 'Contoh',
+        kec: document.getElementById('inp-kec').value.trim() || 'Gunung Putri',
+        kab: document.getElementById('inp-kab').value.trim() || 'Bogor',
+        prov: document.getElementById('inp-prov').value.trim() || 'Jawa Barat'
+      };
+      persistAll();
+      applyProfileUI();
+      closeProfileModal();
+    }
+
+    function switchTab(tab) {
+      state.activeTab = tab;
+      ['dashboard', 'rtrw', 'aparatur', 'bpd', 'kelembagaan'].forEach(t => {
+        const el = document.getElementById('tab-' + t);
+        if (el) el.classList.toggle('tab-active', t === tab);
+      });
+
+      document.getElementById('view-dashboard').classList.toggle('hidden', tab !== 'dashboard');
+      document.getElementById('view-rtrw').classList.toggle('hidden', tab !== 'rtrw');
+      document.getElementById('view-generic').classList.toggle('hidden', !['aparatur', 'bpd', 'kelembagaan'].includes(tab));
+
+      if (tab === 'dashboard') renderDashboard();
+      if (tab === 'rtrw') { populateJabatanFilter(); renderRTRWTable(); }
+      if (['aparatur', 'bpd', 'kelembagaan'].includes(tab)) renderGenericModule(tab);
+    }
+
+    function updateBadgesAndStats() {
+      const rtCount = state.rtrw.filter(r => r.unit === 'RT').length;
+      const rwCount = state.rtrw.filter(r => r.unit === 'RW').length;
+
+      document.getElementById('badge-rtrw').textContent = state.rtrw.length;
+      document.getElementById('badge-aparatur').textContent = state.aparatur.length;
+      document.getElementById('badge-bpd').textContent = state.bpd.length;
+      document.getElementById('badge-kelembagaan').textContent = state.kelembagaan.length;
+
+      document.getElementById('stat-rtrw-total').textContent = state.rtrw.length;
+      document.getElementById('stat-rtrw-split').textContent = `${rtCount} RT • ${rwCount} RW`;
+      document.getElementById('stat-aparatur-total').textContent = state.aparatur.length;
+      document.getElementById('stat-bpd-total').textContent = state.bpd.length;
+      document.getElementById('stat-lembaga-total').textContent = state.kelembagaan.length;
+    }
+
+    function renderDashboard() {
+      updateBadgesAndStats();
+
+      const jabCounts = {};
+      state.rtrw.forEach(r => {
+        const j = (r.jabatan || 'LAINNYA').replace('SEKERTARIS', 'SEKRETARIS');
+        jabCounts[j] = (jabCounts[j] || 0) + 1;
+      });
+      const sortedJab = Object.entries(jabCounts).sort((a, b) => b[1] - a[1]);
+
+      const ctx1 = document.getElementById('chartJabatan').getContext('2d');
+      if (chartJabatanInstance) chartJabatanInstance.destroy();
+      chartJabatanInstance = new Chart(ctx1, {
+        type: 'bar',
+        data: {
+          labels: sortedJab.map(x => x[0]),
+          datasets: [{
+            label: 'Jumlah Pengurus',
+            data: sortedJab.map(x => x[1]),
+            backgroundColor: '#064E3B',
+            borderRadius: 6
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          indexAxis: 'y',
+          plugins: { legend: { display: false } },
+          scales: { x: { beginAtZero: true, ticks: { precision: 0 } } }
+        }
+      });
+
+      const rtCount = state.rtrw.filter(r => r.unit === 'RT').length;
+      const rwCount = state.rtrw.filter(r => r.unit === 'RW').length;
+      const ctx2 = document.getElementById('chartUnit').getContext('2d');
+      if (chartUnitInstance) chartUnitInstance.destroy();
+      chartUnitInstance = new Chart(ctx2, {
+        type: 'bar',
+        data: {
+          labels: ['Unit RT', 'Unit RW', 'Aparatur Desa', 'BPD', 'Kelembagaan'],
+          datasets: [{
+            label: 'Jumlah Data',
+            data: [rtCount, rwCount, state.aparatur.length, state.bpd.length, state.kelembagaan.length],
+            backgroundColor: ['#064E3B', '#B45309', '#1E3A8A', '#4B5563', '#047857'],
+            borderRadius: 6
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
+        }
+      });
+    }
+
+    function populateJabatanFilter() {
+      const sel = document.getElementById('rtrw-jabatan-filter');
+      const current = sel.value;
+      const set = new Set(state.rtrw.map(r => (r.jabatan || '').replace('SEKERTARIS', 'SEKRETARIS')).filter(Boolean));
+      sel.innerHTML = '<option value="">Semua Jabatan</option>' + Array.from(set).sort().map(j => `<option value="${esc(j)}">${esc(j)}</option>`).join('');
+      sel.value = current;
+    }
+
+    function getFilteredRTRW() {
+      const q = (document.getElementById('rtrw-search').value || '').toLowerCase().trim();
+      const unit = document.getElementById('rtrw-unit-filter').value;
+      const jab = document.getElementById('rtrw-jabatan-filter').value;
+
+      return state.rtrw.filter(r => {
+        if (unit && r.unit !== unit) return false;
+        const normJab = (r.jabatan || '').replace('SEKERTARIS', 'SEKRETARIS');
+        if (jab && normJab !== jab) return false;
+        if (!q) return true;
+        const hay = [r.nama, r.nik, r.nkk, normJab, r.pekerjaan, r.tempat_lahir, r.no_hp, r.email].join(' ').toLowerCase();
+        return hay.includes(q);
+      });
+    }
+
+    function renderRTRWTable() {
+      const rows = getFilteredRTRW();
+      document.getElementById('rtrw-count-label').textContent = rows.length;
+      const tbody = document.getElementById('rtrw-tbody');
+
+      if (!rows.length) {
+        tbody.innerHTML = '<tr><td colspan="8" class="px-4 py-8 text-center text-gray-500">Tidak ada data RT/RW yang sesuai dengan filter.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = rows.map((r, idx) => {
+        const docs = [
+          r.link_ktp ? `<a href="${esc(r.link_ktp)}" target="_blank" class="text-[#064E3B] underline">KTP</a>` : '',
+          r.link_kk ? `<a href="${esc(r.link_kk)}" target="_blank" class="text-[#064E3B] underline">KK</a>` : '',
+          r.link_foto ? `<a href="${esc(r.link_foto)}" target="_blank" class="text-[#B45309] underline">Foto</a>` : ''
+        ].filter(Boolean).join(' • ') || '<span class="text-gray-400">-</span>';
+
+        return `
+          <tr class="hover:bg-[#FAF9F6]/70">
+            <td class="px-3 py-2.5 text-gray-500">${idx + 1}</td>
+            <td class="px-3 py-2.5 font-semibold text-gray-900">${esc(r.nama)}</td>
+            <td class="px-3 py-2.5">
+              <span class="inline-block text-[11px] font-bold px-1.5 py-0.5 rounded mr-1 ${r.unit === 'RW' ? 'bg-amber-100 text-[#B45309]' : 'bg-emerald-100 text-[#064E3B]'}">${esc(r.unit || 'RT')}</span>
+              <span class="text-xs text-gray-800">${esc((r.jabatan || '').replace('SEKERTARIS', 'SEKRETARIS'))}</span>
+            </td>
+            <td class="px-3 py-2.5 text-xs">
+              <div>NIK: <span class="font-mono">${esc(r.nik || '-')}</span></div>
+              <div class="text-gray-500">KK: <span class="font-mono">${esc(r.nkk || '-')}</span></div>
+            </td>
+            <td class="px-3 py-2.5 text-xs">
+              <div>${esc(r.tempat_lahir || '-')}, ${esc(r.tanggal_lahir || '-')}</div>
+              <div class="text-gray-500">${esc(r.pekerjaan || '-')}</div>
+            </td>
+            <td class="px-3 py-2.5 text-xs">
+              <div>${esc(r.no_hp || '-')}</div>
+              <div class="text-gray-500 truncate max-w-[160px]">${esc(r.email || '-')}</div>
+            </td>
+            <td class="px-3 py-2.5 text-xs no-print">${docs}</td>
+            <td class="px-3 py-2.5 text-right whitespace-nowrap no-print">
+              <button onclick="openRTRWModal('${esc(r.id)}')" class="text-xs font-medium text-[#064E3B] hover:underline mr-2 cursor-pointer">Edit</button>
+              <button onclick="deleteRTRW('${esc(r.id)}')" class="text-xs font-medium text-red-600 hover:underline cursor-pointer">Hapus</button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function openRTRWModal(id = null) {
+      document.getElementById('rtrw-edit-id').value = id || '';
+      if (id) {
+        const item = state.rtrw.find(x => x.id === id);
+        if (!item) return;
+        document.getElementById('rtrw-modal-title').textContent = 'Edit Data Pengurus RT / RW';
+        document.getElementById('rtrw-nama').value = item.nama || '';
+        document.getElementById('rtrw-unit').value = item.unit || 'RT';
+        document.getElementById('rtrw-jabatan').value = item.jabatan || '';
+        document.getElementById('rtrw-nik').value = item.nik || '';
+        document.getElementById('rtrw-nkk').value = item.nkk || '';
+        document.getElementById('rtrw-bpjs').value = item.bpjs || '';
+        document.getElementById('rtrw-tmpt').value = item.tempat_lahir || '';
+        document.getElementById('rtrw-tgl').value = item.tanggal_lahir || '';
+        document.getElementById('rtrw-kerja').value = item.pekerjaan || '';
+        document.getElementById('rtrw-kawin').value = item.status_kawin || '';
+        document.getElementById('rtrw-hp').value = item.no_hp || '';
+        document.getElementById('rtrw-email').value = item.email || '';
+      } else {
+        document.getElementById('rtrw-modal-title').textContent = 'Tambah Data Pengurus RT / RW';
+        ['rtrw-nama','rtrw-jabatan','rtrw-nik','rtrw-nkk','rtrw-bpjs','rtrw-tmpt','rtrw-tgl','rtrw-kerja','rtrw-kawin','rtrw-hp','rtrw-email'].forEach(fid => {
+          document.getElementById(fid).value = '';
+        });
+        document.getElementById('rtrw-unit').value = 'RT';
+      }
+      document.getElementById('rtrw-modal').classList.remove('hidden');
+    }
+
+    function closeRTRWModal() {
+      document.getElementById('rtrw-modal').classList.add('hidden');
+    }
+
+    function saveRTRW() {
+      const nama = document.getElementById('rtrw-nama').value.trim();
+      const jabatan = document.getElementById('rtrw-jabatan').value.trim().toUpperCase();
+      if (!nama || !jabatan) {
+        alert('Nama Lengkap dan Jabatan wajib diisi.');
+        return;
+      }
+      const editId = document.getElementById('rtrw-edit-id').value;
+      const unitVal = document.getElementById('rtrw-unit').value;
+      const payload = {
+        id: editId || ('RTRW-' + Date.now()),
+        cap_waktu: new Date().toLocaleString('id-ID'),
+        nama,
+        unit: unitVal,
+        jabatan,
+        nik: document.getElementById('rtrw-nik').value.trim(),
+        nkk: document.getElementById('rtrw-nkk').value.trim(),
+        bpjs: document.getElementById('rtrw-bpjs').value.trim(),
+        tempat_lahir: document.getElementById('rtrw-tmpt').value.trim(),
+        tanggal_lahir: document.getElementById('rtrw-tgl').value.trim(),
+        pekerjaan: document.getElementById('rtrw-kerja').value.trim(),
+        status_kawin: document.getElementById('rtrw-kawin').value.trim(),
+        no_hp: document.getElementById('rtrw-hp').value.trim(),
+        email: document.getElementById('rtrw-email').value.trim(),
+        status: 'Aktif'
+      };
+
+      if (editId) {
+        const idx = state.rtrw.findIndex(x => x.id === editId);
+        if (idx !== -1) state.rtrw[idx] = { ...state.rtrw[idx], ...payload };
+      } else {
+        state.rtrw.unshift(payload);
+      }
+
+      persistAll();
+      updateBadgesAndStats();
+      populateJabatanFilter();
+      renderRTRWTable();
+      closeRTRWModal();
+    }
+
+    function deleteRTRW(id) {
+      if (!confirm('Hapus data pengurus RT/RW ini?')) return;
+      state.rtrw = state.rtrw.filter(x => x.id !== id);
+      persistAll();
+      updateBadgesAndStats();
+      populateJabatanFilter();
+      renderRTRWTable();
+    }
+
+    function exportRTRWCSV() {
+      const headers = ['ID','Unit','Jabatan','Nama Lengkap','NIK','NKK','BPJS','Tempat Lahir','Tanggal Lahir','Pekerjaan','Status Perkawinan','No HP','Email','Status'];
+      const lines = [headers.join(',')];
+      state.rtrw.forEach(r => {
+        const vals = [r.id, r.unit, r.jabatan, r.nama, r.nik, r.nkk, r.bpjs, r.tempat_lahir, r.tanggal_lahir, r.pekerjaan, r.status_kawin, r.no_hp, r.email, r.status];
+        lines.push(vals.map(v => '"' + String(v || '').replace(/"/g, '""') + '"').join(','));
+      });
+      downloadFile(lines.join('\n'), 'data-pengurus-rt-rw.csv', 'text/csv;charset=utf-8;');
+    }
+
+    function importRTRWCSV(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const text = e.target.result;
+        const parsed = parseCSVRows(text);
+        if (parsed.length < 2) return alert('File CSV kosong atau format tidak sesuai.');
+        const hdr = parsed[0].map(h => h.trim().toLowerCase());
+        const findCol = (keys) => hdr.findIndex(h => keys.some(k => h.includes(k)));
+
+        const iNama = findCol(['nama lengkap', 'nama']);
+        const iNik = findCol(['nik', 'kependudukan']);
+        const iNkk = findCol(['nkk', 'kartu keluarga']);
+        const iBpjs = findCol(['bpjs']);
+        const iTmpt = findCol(['tempat lahir']);
+        const iTgl = findCol(['tanggal lahir']);
+        const iKerja = findCol(['pekerjaan']);
+        const iKawin = findCol(['perkawinan']);
+        const iHp = findCol(['handphone', 'hp']);
+        const iEmail = findCol(['email']);
+        const iJab = findCol(['jabatan']);
+
+        let added = 0;
+        for (let i = 1; i < parsed.length; i++) {
+          const row = parsed[i];
+          const nama = iNama >= 0 ? (row[iNama] || '').trim() : '';
+          if (!nama) continue;
+          const jabRaw = (iJab >= 0 ? (row[iJab] || '') : '').trim().toUpperCase().replace('SEKERTARIS', 'SEKRETARIS');
+          const unit = jabRaw.includes('RW') ? 'RW' : 'RT';
+          state.rtrw.push({
+            id: 'RTRW-IMP-' + Date.now() + '-' + i,
+            nama,
+            unit,
+            jabatan: jabRaw || 'PENGURUS',
+            nik: iNik >= 0 ? (row[iNik] || '').trim() : '',
+            nkk: iNkk >= 0 ? (row[iNkk] || '').trim() : '',
+            bpjs: iBpjs >= 0 ? (row[iBpjs] || '').trim() : '',
+            tempat_lahir: iTmpt >= 0 ? (row[iTmpt] || '').trim() : '',
+            tanggal_lahir: iTgl >= 0 ? (row[iTgl] || '').trim() : '',
+            pekerjaan: iKerja >= 0 ? (row[iKerja] || '').trim() : '',
+            status_kawin: iKawin >= 0 ? (row[iKawin] || '').trim() : '',
+            no_hp: iHp >= 0 ? (row[iHp] || '').trim() : '',
+            email: iEmail >= 0 ? (row[iEmail] || '').trim() : '',
+            status: 'Aktif'
+          });
+          added++;
+        }
+        persistAll();
+        updateBadgesAndStats();
+        populateJabatanFilter();
+        renderRTRWTable();
+        alert(`Berhasil mengimpor ${added} data pengurus RT/RW.`);
+      };
+      reader.readAsText(file);
+      event.target.value = '';
+    }
+
+    function parseCSVRows(text) {
+      const rows = [];
+      let cur = [];
+      let field = '';
+      let inQuotes = false;
+      for (let i = 0; i < text.length; i++) {
+        const ch = text[i];
+        const next = text[i + 1];
+        if (inQuotes) {
+          if (ch === '"' && next === '"') { field += '"'; i++; }
+          else if (ch === '"') { inQuotes = false; }
+          else { field += ch; }
+        } else {
+          if (ch === '"') { inQuotes = true; }
+          else if (ch === ',') { cur.push(field); field = ''; }
+          else if (ch === '\n' || (ch === '\r' && next === '\n')) {
+            cur.push(field); rows.push(cur); cur = []; field = '';
+            if (ch === '\r') i++;
+          } else { field += ch; }
+        }
+      }
+      if (field.length || cur.length) { cur.push(field); rows.push(cur); }
+      return rows;
+    }
+
+    const GENERIC_CONFIG = {
+      aparatur: {
+        title: 'Data Aparatur Pemerintah Desa',
+        desc: 'Kelola data Kepala Desa, Sekretaris Desa, Kaur, Kasi, dan Kepala Dusun.',
+        cols: ['Nama Lengkap', 'Jabatan', 'NIAP / NIP', 'Masa Jabatan', 'Status'],
+        fields: [
+          { key: 'nama', label: 'Nama Lengkap', placeholder: 'Nama perangkat desa' },
+          { key: 'jabatan', label: 'Jabatan', placeholder: 'Contoh: Sekretaris Desa' },
+          { key: 'niap', label: 'NIAP / NIP', placeholder: 'Nomor induk aparatur' },
+          { key: 'masa_jabatan', label: 'Masa Jabatan', placeholder: 'Contoh: 2024 - 2030' },
+          { key: 'status', label: 'Status', placeholder: 'Aktif / Non-Aktif' }
+        ]
+      },
+      bpd: {
+        title: 'Data Badan Permusyawaratan Desa (BPD)',
+        desc: 'Kelola data pimpinan dan anggota BPD berdasarkan keterwakilan.',
+        cols: ['Nama Lengkap', 'Jabatan BPD', 'Keterwakilan', 'Periode', 'Status'],
+        fields: [
+          { key: 'nama', label: 'Nama Lengkap', placeholder: 'Nama anggota BPD' },
+          { key: 'jabatan', label: 'Jabatan BPD', placeholder: 'Ketua / Wakil / Sekretaris / Anggota' },
+          { key: 'keterwakilan', label: 'Keterwakilan', placeholder: 'Wilayah / Keterwakilan Perempuan' },
+          { key: 'periode', label: 'Periode', placeholder: 'Contoh: 2024 - 2030' },
+          { key: 'status', label: 'Status', placeholder: 'Aktif / Non-Aktif' }
+        ]
+      },
+      kelembagaan: {
+        title: 'Data Kelembagaan Desa (LKD & LAD)',
+        desc: 'Kelola data LPMD, TP-PKK, Karang Taruna, Posyandu, Satlinmas, dan lembaga desa lainnya.',
+        cols: ['Nama Lembaga', 'Jenis', 'Ketua / Pengurus Inti', 'Jumlah Anggota', 'Status'],
+        fields: [
+          { key: 'nama', label: 'Nama Lembaga', placeholder: 'Contoh: TP-PKK Desa' },
+          { key: 'jenis', label: 'Jenis', placeholder: 'LKD atau LAD' },
+          { key: 'ketua', label: 'Ketua / Pengurus Inti', placeholder: 'Nama ketua lembaga' },
+          { key: 'jumlah_anggota', label: 'Jumlah Anggota', placeholder: 'Contoh: 25' },
+          { key: 'status', label: 'Status', placeholder: 'Aktif / Tidak Aktif' }
+        ]
+      }
+    };
+
+    function renderGenericModule(mod) {
+      const cfg = GENERIC_CONFIG[mod];
+      document.getElementById('generic-title').textContent = cfg.title;
+      document.getElementById('generic-desc').textContent = cfg.desc;
+      document.getElementById('generic-thead').innerHTML = '<tr>' + cfg.cols.map(c => `<th class="px-3 py-3 text-left">${esc(c)}</th>`).join('') + '<th class="px-3 py-3 text-right no-print">Aksi</th></tr>';
+      renderGenericTable();
+    }
+
+    function renderGenericTable() {
+      const mod = state.activeTab;
+      const cfg = GENERIC_CONFIG[mod];
+      const q = (document.getElementById('generic-search').value || '').toLowerCase().trim();
+      const list = (state[mod] || []).filter(item => !q || Object.values(item).join(' ').toLowerCase().includes(q));
+      const tbody = document.getElementById('generic-tbody');
+
+      if (!list.length) {
+        tbody.innerHTML = `<tr><td colspan="${cfg.cols.length + 1}" class="px-4 py-8 text-center text-gray-500">Belum ada data pada modul ini. Klik <strong>+ Tambah Data</strong> untuk menambahkan.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = list.map(item => {
+        const tds = cfg.fields.map(f => `<td class="px-3 py-2.5 text-gray-800">${esc(item[f.key] || '-')}</td>`).join('');
+        return `
+          <tr class="hover:bg-[#FAF9F6]/70">
+            ${tds}
+            <td class="px-3 py-2.5 text-right whitespace-nowrap no-print">
+              <button onclick="openGenericModal('${esc(item.id)}')" class="text-xs font-medium text-[#064E3B] hover:underline mr-2 cursor-pointer">Edit</button>
+              <button onclick="deleteGeneric('${esc(item.id)}')" class="text-xs font-medium text-red-600 hover:underline cursor-pointer">Hapus</button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function openGenericModal(id = null) {
+      const mod = state.activeTab;
+      const cfg = GENERIC_CONFIG[mod];
+      const existing = id ? state[mod].find(x => x.id === id) : null;
+      document.getElementById('gen-edit-id').value = id || '';
+      document.getElementById('generic-modal-title').textContent = (id ? 'Edit ' : 'Tambah ') + cfg.title;
+      document.getElementById('gen-form-fields').innerHTML = cfg.fields.map(f => `
+        <div>
+          <label class="block text-xs font-medium text-gray-700 mb-1">${esc(f.label)}</label>
+          <input id="gen-f-${esc(f.key)}" type="text" value="${esc(existing ? (existing[f.key] || '') : '')}" placeholder="${esc(f.placeholder)}" class="w-full px-3 py-2 border border-gray-300 rounded-lg" />
+        </div>
+      `).join('');
+      document.getElementById('generic-modal').classList.remove('hidden');
+    }
+
+    function closeGenericModal() {
+      document.getElementById('generic-modal').classList.add('hidden');
+    }
+
+    function saveGeneric() {
+      const mod = state.activeTab;
+      const cfg = GENERIC_CONFIG[mod];
+      const id = document.getElementById('gen-edit-id').value;
+      const record = { id: id || (mod.toUpperCase() + '-' + Date.now()) };
+      cfg.fields.forEach(f => {
+        record[f.key] = document.getElementById('gen-f-' + f.key).value.trim();
+      });
+      if (!record[cfg.fields[0].key]) {
+        alert(cfg.fields[0].label + ' wajib diisi.');
+        return;
+      }
+      if (id) {
+        const idx = state[mod].findIndex(x => x.id === id);
+        if (idx !== -1) state[mod][idx] = record;
+      } else {
+        state[mod].unshift(record);
+      }
+      persistAll();
+      updateBadgesAndStats();
+      renderGenericTable();
+      closeGenericModal();
+    }
+
+    function deleteGeneric(id) {
+      const mod = state.activeTab;
+      if (!confirm('Hapus data ini?')) return;
+      state[mod] = state[mod].filter(x => x.id !== id);
+      persistAll();
+      updateBadgesAndStats();
+      renderGenericTable();
+    }
+
+    function exportGenericCSV() {
+      const mod = state.activeTab;
+      const cfg = GENERIC_CONFIG[mod];
+      const lines = [cfg.cols.join(',')];
+      (state[mod] || []).forEach(item => {
+        lines.push(cfg.fields.map(f => '"' + String(item[f.key] || '').replace(/"/g, '""') + '"').join(','));
+      });
+      downloadFile(lines.join('\n'), `data-${mod}.csv`, 'text/csv;charset=utf-8;');
+    }
+
+    function downloadFile(content, filename, mime) {
+      const blob = new Blob([content], { type: mime });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function printCurrentView() {
+      if (state.activeTab === 'dashboard') {
+        switchTab('rtrw');
+        setTimeout(() => window.print(), 150);
+      } else {
+        window.print();
+      }
+    }
+
+    function esc(str) {
+      return String(str ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    loadState();
+    applyProfileUI();
+    updateBadgesAndStats();
+    renderDashboard();
+  </script>
+</body>
+</html>
